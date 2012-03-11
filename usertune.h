@@ -104,6 +104,7 @@ public:
 
 protected slots:
     void onTrackChanged(QVariantMap trackInfo);
+    void onStopPublishing();
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);

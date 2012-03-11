@@ -7,6 +7,21 @@
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
 
+enum PlayStatus
+{
+    PSPlaying = 0,
+    PSPaused,
+    PSStopped
+};
+
+struct PlayerStatus
+{
+    int PlayStatus_;
+    int PlayOrder_;
+    int PlayRepeat_;
+    int StopOnce_;
+};
+
 class MprisFetcher : public QObject
 {
 Q_OBJECT
@@ -26,11 +41,13 @@ private:
 
 signals:
     void trackChanged(QVariantMap trackInfo);
+    void playerStoped();
 
 public slots:
 
 protected slots:
     void onTrackChange(QVariantMap m_metadata);
+    void onStatusChange(int PlayStatus_, int PlayOrder_,  int PlayRepeat_, int StopOnce_);
 
 };
 

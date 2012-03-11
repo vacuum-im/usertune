@@ -133,6 +133,7 @@ bool UserTuneHandler::initObjects()
         FServiceDiscovery->insertDiscoFeature(feature);
 
         QObject::connect(FMprisFetcher, SIGNAL(trackChanged(QVariantMap)), this, SLOT(onTrackChanged(QVariantMap)));
+        QObject::connect(FMprisFetcher, SIGNAL(playerStoped()), this, SLOT(onStopPublishing()));
 
     }
     else
@@ -282,6 +283,24 @@ void UserTuneHandler::onTrackChanged(QVariantMap trackInfo)
 
     QDomText t3 = doc.createTextNode(trackInfo.value("album").toString());
     album.appendChild(t3);
+
+    Jid streamJid;
+
+    for (int i = 0; i < FXmppStreams->xmppStreams().size(); i++)
+    {
+        streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
+        FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
+    }
+}
+
+void UserTuneHandler::onStopPublishing()
+{
+    QDomDocument doc("");
+    QDomElement root = doc.createElement("item");
+    doc.appendChild(root);
+
+    QDomElement tune = doc.createElement("tune");
+    root.appendChild(tune);
 
     Jid streamJid;
 

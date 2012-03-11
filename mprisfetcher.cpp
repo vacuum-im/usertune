@@ -12,14 +12,22 @@ MprisFetcher::~MprisFetcher()
 {
     if (playerExist)
     {
-        bool test = QDBusConnection::sessionBus().disconnect("org.mpris." + curPlayerName,
-                                            "/Player",
-                                            "org.freedesktop.MediaPlayer",
-                                            "TrackChange",
-                                            "a{sv}",
-                                            this,
-                                            SLOT(onTrackChange(QVariantMap)));
-        qDebug() << test;
+        QDBusConnection::sessionBus().disconnect(
+                "org.mpris." + curPlayerName,
+                "/Player",
+                "org.freedesktop.MediaPlayer",
+                "TrackChange",
+                "a{sv}",
+                this,
+                SLOT(onTrackChange(QVariantMap)));
+        QDBusConnection::sessionBus().disconnect(
+                "org.mpris." + curPlayerName,
+                "/Player",
+                "org.freedesktop.MediaPlayer",
+                "StatusChange",
+                "(iiii)",
+                this,
+                SLOT (onStatusChange(int, int, int, int)));
         delete m_player;
     }
 }
@@ -37,13 +45,22 @@ QString MprisFetcher::setPlayer(QString playerName)
 {
     if (playerExist)
     {
-        QDBusConnection::sessionBus().disconnect("org.mpris." + curPlayerName,
-                                            "/Player",
-                                            "org.freedesktop.MediaPlayer",
-                                            "TrackChange",
-                                            "a{sv}",
-                                            this,
-                                            SLOT(onTrackChange(QVariantMap)));
+        QDBusConnection::sessionBus().disconnect(
+                "org.mpris." + curPlayerName,
+                "/Player",
+                "org.freedesktop.MediaPlayer",
+                "TrackChange",
+                "a{sv}",
+                this,
+                SLOT(onTrackChange(QVariantMap)));
+        QDBusConnection::sessionBus().disconnect(
+                "org.mpris." + curPlayerName,
+                "/Player",
+                "org.freedesktop.MediaPlayer",
+                "StatusChange",
+                "(iiii)",
+                this,
+                SLOT (onStatusChange(int, int, int, int)));
         delete m_player;
     }
     m_player = new QDBusInterface("org.mpris." + playerName, "/Player",
@@ -60,6 +77,15 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "a{sv}",
                 this,
                 SLOT(onTrackChange(QVariantMap)));
+    bool test = QDBusConnection::sessionBus().connect(
+                "org.mpris." + playerName,
+                "/Player",
+                "org.freedesktop.MediaPlayer",
+                "StatusChange",
+                "(iiii)",
+                this,
+                SLOT (onStatusChange(int, int, int, int)));
+    qDebug() << "status connect: " << test;
     QDBusReply<QVariantMap> m_metadata = m_player->call("GetMetadata");
     QVariantMap trackInfo = m_metadata.value();
     QList<QString> keys = trackInfo.keys();
@@ -96,4 +122,11 @@ void MprisFetcher::onTrackChange(QVariantMap trackInfo)
 
     emit trackChanged(trackInfo);
 
+}
+
+void MprisFetcher::onStatusChange(int PlayStatus_, int PlayOrder_,  int PlayRepeat_, int StopOnce_)
+{
+    qDebug() << PlayStatus_;
+    if (PlayStatus_ == PSStopped)
+        emit playerStoped();
 }
