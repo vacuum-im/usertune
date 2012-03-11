@@ -37,6 +37,9 @@
 #include <definitions/rostertooltiporders.h>
 #include <definitions/rosterindextyperole.h>
 
+#include <definitions/optionvalues.h>
+#include <utils/options.h>
+
 #include "mprisfetcher.h"
 
 #ifdef SVNINFO
@@ -81,7 +84,7 @@ protected slots:
         void onApplicationQuit();
 
 protected:
-        void setContactTune(const Jid &AContactJid, const QString &ASong);
+        void setContactTune(const QString &AContactJid, const QString &ASong);
 
 private:
         IPEPManager *FPEPManager;

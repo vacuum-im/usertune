@@ -37,14 +37,13 @@ QString MprisFetcher::setPlayer(QString playerName)
 {
     if (playerExist)
     {
-        bool test = QDBusConnection::sessionBus().disconnect("org.mpris." + curPlayerName,
+        QDBusConnection::sessionBus().disconnect("org.mpris." + curPlayerName,
                                             "/Player",
                                             "org.freedesktop.MediaPlayer",
                                             "TrackChange",
                                             "a{sv}",
                                             this,
                                             SLOT(onTrackChange(QVariantMap)));
-//        qDebug() << test;
         delete m_player;
     }
     m_player = new QDBusInterface("org.mpris." + playerName, "/Player",

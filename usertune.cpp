@@ -1,12 +1,9 @@
 #include <QDebug>
 
-#include <definitions/optionvalues.h>
-#include <utils/options.h>
-
 #include "usertune.h"
 
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
-#define NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
+#define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
 
 UserTuneHandler::UserTuneHandler()
 {
@@ -34,8 +31,10 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
         APluginInfo->dependences.append(XMPPSTREAMS_UUID);
 }
 
-bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &/*AInitOrder*/)
+bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInitOrder)
 {
+        AInitOrder=500;
+
         IPlugin *plugin;
 
         plugin = APluginManager->pluginInterface("IPEPManager").value(0,NULL);
@@ -48,46 +47,36 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &/*AIn
 
         plugin = APluginManager->pluginInterface("IXmppStreams").value(0,NULL);
         if (!plugin) return false;
-                 FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
+                FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
 
-                 plugin = APluginManager->pluginInterface("IRostersViewPlugin").value(0,NULL);
-                 if (plugin)
-                 {
-                     FRostersViewPlugin = qobject_cast<IRostersViewPlugin *>(plugin->instance());
-                     if (FRostersViewPlugin)
-                     {
-                         connect(FRostersViewPlugin->rostersView()->instance(),SIGNAL(indexToolTips(IRosterIndex *, int, QMultiMap<int,QString> &)),
+        plugin = APluginManager->pluginInterface("IRosterPlugin").value(0,NULL);
+        if (plugin)
+        {
+                FRosterPlugin = qobject_cast<IRosterPlugin *>(plugin->instance());
+        }
+
+        plugin = APluginManager->pluginInterface("IRostersModel").value(0,NULL);
+        if (plugin)
+        {
+                FRostersModel = qobject_cast<IRostersModel *>(plugin->instance());
+        }
+
+        plugin = APluginManager->pluginInterface("IRostersViewPlugin").value(0,NULL);
+        if (plugin)
+        {
+                FRostersViewPlugin = qobject_cast<IRostersViewPlugin *>(plugin->instance());
+                if (FRostersViewPlugin)
+                {
+                     connect(FRostersViewPlugin->rostersView()->instance(),SIGNAL(indexToolTips(IRosterIndex *, int, QMultiMap<int,QString> &)),
                              SLOT(onRosterIndexToolTips(IRosterIndex *, int, QMultiMap<int,QString> &)));
-                     }
-                 }
+                }
+        }
 
-                 plugin = APluginManager->pluginInterface("IRosterPlugin").value(0,NULL);
-                 if (plugin)
-                 {
-                     FRosterPlugin = qobject_cast<IRosterPlugin *>(plugin->instance());
-                  /*   if (FRosterPlugin)
-                     {
-                         connect(FRosterPlugin->instance(),SIGNAL(rosterItemReceived(IRoster *, const IRosterItem &, const IRosterItem &)),
-                             SLOT(onRosterItemReceived(IRoster *, const IRosterItem &, const IRosterItem &)));
-                     } */
-                 }
-
-
-                 plugin = APluginManager->pluginInterface("IRostersModel").value(0,NULL);
-                 if (plugin)
-                 {
-                     FRostersModel = qobject_cast<IRostersModel *>(plugin->instance());
-                    /* if (FRostersModel)
-                     {
-                         connect(FRostersModel->instance(),SIGNAL(indexInserted(IRosterIndex *)),SLOT(onRosterIndexInserted(IRosterIndex *)));
-                     } */
-                 }
-
-                 plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
-                 if (plugin)
-                 {
-                         FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
-                 }
+        plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
+        if (plugin)
+        {
+                 FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
+        }
 
         connect(Options::instance(),SIGNAL(optionsOpened()),SLOT(onOptionsOpened()));
         connect(Options::instance(),SIGNAL(optionsChanged(const OptionsNode &)),SLOT(onOptionsChanged(const OptionsNode &)));
@@ -114,11 +103,13 @@ bool UserTuneHandler::initObjects()
 
         IDiscoFeature feature;
         feature.active = true;
-
+        feature.name = tr("User tune");
         feature.var = TUNE_PROTOCOL_URL;
+
         FServiceDiscovery->insertDiscoFeature(feature);
 
-        feature.var = NOTIFY_PROTOCOL_URL;
+        feature.name = tr("User tune notification");
+        feature.var = TUNE_NOTIFY_PROTOCOL_URL;
         FServiceDiscovery->insertDiscoFeature(feature);
 
         QObject::connect(FMprisFetcher, SIGNAL(trackChanged(QVariantMap)), this, SLOT(onTrackChanged(QVariantMap)));
@@ -270,20 +261,20 @@ void UserTuneHandler::onTrackChanged(QVariantMap trackInfo)
     }
 }
 
-void UserTuneHandler::setContactTune(const Jid &AContactJid, const QString &ASong)
+void UserTuneHandler::setContactTune(const QString &AContactJid, const QString &ASong)
 {
-    Jid contactJid = AContactJid.pBare();
-    if (FContactTune.value(contactJid) != ASong)
+//    Jid contactJid = AContactJid.pBare();
+    if (FContactTune.value(AContactJid) != ASong)
     {
         if (!ASong.isEmpty())
-            FContactTune.insert(contactJid,ASong);
+            FContactTune.insert(AContactJid,ASong);
         else
-            FContactTune.remove(contactJid);
+            FContactTune.remove(AContactJid);
     }
 
     QMultiMap<int, QVariant> findData;
     findData.insert(RDR_TYPE,RIT_CONTACT);
-    findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
+    findData.insert(RDR_PREP_BARE_JID,AContactJid/*.pBare()*/);
     foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
 
     if (!ASong.isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()))
