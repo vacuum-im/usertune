@@ -178,25 +178,23 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
 
 void UserTuneHandler::onOptionsOpened()
 {
-        onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
+//        onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
 }
 
 void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
-        if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
-        {
-                //true action
-        }
-        else
-        {
-               //false action
-        }
+    foreach (const QString &AContactJid, FContactTune.keys()){
 
+        QMultiMap<int, QVariant> findData;
+        findData.insert(RDR_TYPE,RIT_CONTACT);
+        findData.insert(RDR_PREP_BARE_JID,AContactJid);
+        foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
 
-   /*     else if (ANode.path() == OPV_)
-        {
-
-        } */
+            if (!FContactTune.value(AContactJid).isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()) && Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+                FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+            else
+                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+    }
 }
 
 bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
@@ -309,7 +307,7 @@ void UserTuneHandler::setContactTune(const QString &AContactJid, const UserTune 
     findData.insert(RDR_PREP_BARE_JID,AContactJid);
     foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
 
-    if (!ASong.isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()))
+    if (!ASong.isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()) && Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
         FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
     else
         FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
