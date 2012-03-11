@@ -323,7 +323,7 @@ void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, 
         QString contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
         if (!FContactTune.value(contactJid).isEmpty())
         {
-            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(Qt::escape(FContactTune.value(contactJid)).replace("\n","<br>"));
+            QString tip = QString("%1 <div style='margin-left:10px;'>%2 - %3<br>%4 %5</div>").arg(tr("Listen:")).arg(FContactTune.value(contactJid).artist).arg(FContactTune.value(contactJid).title).arg(tr("Album ")).arg(FContactTune.value(contactJid).source);
             AToolTips.insert(RTTO_USERTUNE,tip);
         }
     }
