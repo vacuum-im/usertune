@@ -115,30 +115,30 @@ bool UserTuneHandler::initObjects()
 {
 
     FPlayers = FMprisFetcher->getPlayers();
-    if (FPlayers.isEmpty())
+    if (!FPlayers.isEmpty())
     {
-        // зачем? Если я запускаю вакуум раньше плеер потом лезть влкючать плагин? Пусть висит, а плеер можно выбрать в настройках
-        qWarning() << "No MPRIS capable players detected. Disabling plugin...";
-        return false;
+        FMprisFetcher->setPlayer(FPlayers.first());
+
+        handlerId = FPEPManager->insertNodeHandler(TUNE_PROTOCOL_URL, this);
+
+        IDiscoFeature feature;
+        feature.active = true;
+        feature.name = tr("User tune");
+        feature.var = TUNE_PROTOCOL_URL;
+
+        FServiceDiscovery->insertDiscoFeature(feature);
+
+        feature.name = tr("User tune notification");
+        feature.var = TUNE_NOTIFY_PROTOCOL_URL;
+        FServiceDiscovery->insertDiscoFeature(feature);
+
+        QObject::connect(FMprisFetcher, SIGNAL(trackChanged(QVariantMap)), this, SLOT(onTrackChanged(QVariantMap)));
+
     }
-//        player = FMprisFetcher->getPlayers().first();
-//        FMprisFetcher->setFormat("%artist - %title < %album >");
-    FMprisFetcher->setPlayer(FPlayers.first());
-
-    handlerId = FPEPManager->insertNodeHandler(TUNE_PROTOCOL_URL, this);
-
-    IDiscoFeature feature;
-    feature.active = true;
-    feature.name = tr("User tune");
-    feature.var = TUNE_PROTOCOL_URL;
-
-    FServiceDiscovery->insertDiscoFeature(feature);
-
-    feature.name = tr("User tune notification");
-    feature.var = TUNE_NOTIFY_PROTOCOL_URL;
-    FServiceDiscovery->insertDiscoFeature(feature);
-
-    QObject::connect(FMprisFetcher, SIGNAL(trackChanged(QVariantMap)), this, SLOT(onTrackChanged(QVariantMap)));
+    else
+    {
+        qWarning() << "No MPRIS capable players detected.";
+    }
 
     if (FRostersViewPlugin)
     {
