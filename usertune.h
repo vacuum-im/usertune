@@ -51,8 +51,15 @@
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 #define PEP_USERTUNE              4000
 
-struct UserTune
+class UserTune
 {
+public:
+        UserTune();
+        ~UserTune();
+        bool isEmpty() const;
+        bool operator ==(const UserTune &AUserTune) const;
+        bool operator !=(const UserTune &AUserTune) const;
+
         QString artist;
         QString source;
         QString title;

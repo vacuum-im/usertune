@@ -5,6 +5,31 @@
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
 
+UserTune::UserTune()
+{
+
+}
+
+UserTune::~UserTune()
+{
+
+}
+
+bool UserTune::isEmpty() const
+{
+        return artist.isEmpty() && source.isEmpty() && title.isEmpty() && track.isEmpty() && uri.isEmpty();
+}
+
+bool UserTune::operator==(const UserTune &AUserTune) const
+{
+        return (artist==AUserTune.artist && title==AUserTune.title && source==AUserTune.source && track==AUserTune.track && length==AUserTune.length && rating==AUserTune.rating && uri==AUserTune.uri);
+}
+
+bool UserTune::operator!=(const UserTune &AUserTune) const
+{
+        return !operator==(AUserTune);
+}
+
 UserTuneHandler::UserTuneHandler()
 {
         FPEPManager = NULL;
@@ -228,7 +253,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
 
 //    qDebug() << senderJid << " listen " << song;
 
-    setContactTune(senderJid, song);
+    setContactTune(senderJid, userSong);
 
     return true;
 }
