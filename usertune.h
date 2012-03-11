@@ -51,6 +51,17 @@
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 #define PEP_USERTUNE              4000
 
+struct UserTune
+{
+        QString artist;
+        QString source;
+        QString title;
+        QString track;
+        int length;
+        int rating;
+        QUrl uri;
+};
+
 class UserTuneHandler :
                         public QObject,
                         public IPlugin,
@@ -84,7 +95,7 @@ protected slots:
         void onApplicationQuit();
 
 protected:
-        void setContactTune(const QString &AContactJid, const QString &ASong);
+        void setContactTune(const QString &AContactJid, const UserTune &ASong);
 
 private:
         IPEPManager *FPEPManager;
@@ -101,7 +112,7 @@ private:
         int handlerId;
         int FUserTuneLabelId;
 
-        QMap<Jid, QString> FContactTune;
+        QMap<QString, UserTune> FContactTune;
 };
 
 #endif // USERTUNE_H

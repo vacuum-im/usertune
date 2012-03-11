@@ -176,9 +176,8 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 
 bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
 {
-
-    QString song;
     QString senderJid;
+    UserTune userSong;
 
     QDomElement replyElem = AStanza.document().firstChildElement("message");
 
@@ -199,19 +198,27 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
                         QDomElement artistElem = tuneElem.firstChildElement("artist");
 
                         if (!artistElem.isNull()) {
-                            song = artistElem.text();
+                            userSong.artist = artistElem.text();
                         }
 
                         QDomElement titleElem = tuneElem.firstChildElement("title");
 
                         if (!titleElem.isNull()) {
-                            song.append(QString(" - %1").arg(titleElem.text()));
+                            userSong.title = titleElem.text();
+//                            song.append(QString(" - %1").arg(titleElem.text()));
                         }
 
                         QDomElement sourceElem = tuneElem.firstChildElement("source");
 
                         if (!sourceElem.isNull()) {
-                            song.append(QString(" <%1>").arg(sourceElem.text()));
+                            userSong.source = sourceElem.text();
+//                            song.append(QString(" <%1>").arg(sourceElem.text()));
+                        }
+
+                        QDomElement trackElem = tuneElem.firstChildElement("track");
+
+                        if (!trackElem.isNull()) {
+                            userSong.track = trackElem.text();
                         }
                     }
                 }
@@ -219,7 +226,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
         }
     }
 
-    qDebug() << senderJid << " listen " << song;
+//    qDebug() << senderJid << " listen " << song;
 
     setContactTune(senderJid, song);
 
@@ -261,7 +268,7 @@ void UserTuneHandler::onTrackChanged(QVariantMap trackInfo)
     }
 }
 
-void UserTuneHandler::setContactTune(const QString &AContactJid, const QString &ASong)
+void UserTuneHandler::setContactTune(const QString &AContactJid, const UserTune &ASong)
 {
 //    Jid contactJid = AContactJid.pBare();
     if (FContactTune.value(AContactJid) != ASong)
@@ -274,7 +281,7 @@ void UserTuneHandler::setContactTune(const QString &AContactJid, const QString &
 
     QMultiMap<int, QVariant> findData;
     findData.insert(RDR_TYPE,RIT_CONTACT);
-    findData.insert(RDR_PREP_BARE_JID,AContactJid/*.pBare()*/);
+    findData.insert(RDR_PREP_BARE_JID,AContactJid);
     foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
 
     if (!ASong.isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()))
