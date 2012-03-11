@@ -54,72 +54,82 @@
 class UserTune
 {
 public:
-        UserTune();
-        ~UserTune();
-        bool isEmpty() const;
-        bool operator ==(const UserTune &AUserTune) const;
-        bool operator !=(const UserTune &AUserTune) const;
+    UserTune();
+    ~UserTune();
+    bool isEmpty() const;
+    bool operator ==(const UserTune &AUserTune) const;
+    bool operator !=(const UserTune &AUserTune) const;
 
-        QString artist;
-        QString source;
-        QString title;
-        QString track;
-        int length;
-        int rating;
-        QUrl uri;
+    QString artist;
+    QString source;
+    QString title;
+    QString track;
+    int length;
+    int rating;
+    QUrl uri;
 };
 
 class UserTuneHandler :
-                        public QObject,
-                        public IPlugin,
-                        public IOptionsHolder,
-                        public IPEPHandler
+    public QObject,
+    public IPlugin,
+    public IOptionsHolder,
+    public IPEPHandler
 {
-        Q_OBJECT;
-        Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler);
+    Q_OBJECT;
+    Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler);
 public:
-        UserTuneHandler();
-        ~UserTuneHandler();
-        //IPlugin
-        virtual QObject *instance() { return this; }
-        virtual QUuid pluginUuid() const { return USERTUNE_UUID; }
-        virtual void pluginInfo(IPluginInfo *APluginInfo);
-        virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
-        virtual bool initObjects();
-        virtual bool initSettings();
-        virtual bool startPlugin() { return true; }
-        //IOptionsHolder
-        virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
-        //IPEPHandler
-        virtual bool processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza);
+    UserTuneHandler();
+    ~UserTuneHandler();
+    //IPlugin
+    virtual QObject *instance()
+    {
+        return this;
+    }
+    virtual QUuid pluginUuid() const
+    {
+        return USERTUNE_UUID;
+    }
+    virtual void pluginInfo(IPluginInfo *APluginInfo);
+    virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
+    virtual bool initObjects();
+    virtual bool initSettings();
+    virtual bool startPlugin()
+    {
+        return true;
+    }
+    //IOptionsHolder
+    virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
+    //IPEPHandler
+    virtual bool processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza);
 
 protected slots:
-        void onTrackChanged(QVariantMap trackInfo);
-        void onOptionsOpened();
-        void onOptionsChanged(const OptionsNode &ANode);
-        void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
-        void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
-        void onApplicationQuit();
+    void onTrackChanged(QVariantMap trackInfo);
+    void onOptionsOpened();
+    void onOptionsChanged(const OptionsNode &ANode);
+    void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
+    void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
+    void onApplicationQuit();
 
 protected:
-        void setContactTune(const QString &AContactJid, const UserTune &ASong);
+    void setContactTune(const QString &AContactJid, const UserTune &ASong);
+    void setContactLabel();
 
 private:
-        IPEPManager *FPEPManager;
-        IServiceDiscovery *FServiceDiscovery;
-        IXmppStreams *FXmppStreams;
-        IOptionsManager *FOptionsManager;
-        IRosterPlugin *FRosterPlugin;
-        IRostersModel *FRostersModel;
-        IRostersViewPlugin *FRostersViewPlugin;
-        MprisFetcher *FMprisFetcher;
+    IPEPManager *FPEPManager;
+    IServiceDiscovery *FServiceDiscovery;
+    IXmppStreams *FXmppStreams;
+    IOptionsManager *FOptionsManager;
+    IRosterPlugin *FRosterPlugin;
+    IRostersModel *FRostersModel;
+    IRostersViewPlugin *FRostersViewPlugin;
+    MprisFetcher *FMprisFetcher;
 
-        QStringList FPlayers;
-        QString nodeName;
-        int handlerId;
-        int FUserTuneLabelId;
+    QStringList FPlayers;
+    QString nodeName;
+    int handlerId;
+    int FUserTuneLabelId;
 
-        QMap<QString, UserTune> FContactTune;
+    QMap<QString, UserTune> FContactTune;
 };
 
 #endif // USERTUNE_H
