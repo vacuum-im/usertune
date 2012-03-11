@@ -320,7 +320,7 @@ void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, 
 {
     if (ALabelId==RLID_DISPLAY || ALabelId==FUserTuneLabelId)
     {
-        Jid contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
+        QString contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
         if (!FContactTune.value(contactJid).isEmpty())
         {
             QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(Qt::escape(FContactTune.value(contactJid)).replace("\n","<br>"));
