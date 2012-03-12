@@ -97,6 +97,17 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
         }
     }
 
+    plugin = APluginManager->pluginInterface("INotifications").value(0,NULL);
+    if (plugin)
+    {
+        FNotifications = qobject_cast<INotifications *>(plugin->instance());
+        if (FNotifications)
+        {
+            connect(FNotifications->instance(),SIGNAL(notificationActivated(int)), SLOT(onNotificationActivated(int)));
+            connect(FNotifications->instance(),SIGNAL(notificationRemoved(int)), SLOT(onNotificationRemoved(int)));
+        }
+    }
+
     plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
     if (plugin)
     {
@@ -141,6 +152,16 @@ bool UserTuneHandler::initObjects()
         qWarning() << "No MPRIS capable players detected.";
     }
 
+    if (FNotifications)
+    {
+        INotificationType notifyType;
+        notifyType.order = NTO_USERTUNE_NOTIFY;
+        notifyType.icon = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
+        notifyType.title = tr("When reminding of contact playing music");
+        notifyType.kindMask = INotification::PopupWindow;
+        notifyType.kindDefs = notifyType.kindMask;
+        FNotifications->registerNotificationType(NNT_USERTUNE,notifyType);
+    }
     if (FRostersViewPlugin)
     {
         IRostersLabel label;
@@ -155,6 +176,7 @@ bool UserTuneHandler::initObjects()
 bool UserTuneHandler::initSettings()
 {
     Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,true);
+    Options::setDefaultValue(OPV_UT_TAG_FORMAT,"%T - %A - %S");
 
 
     if (FOptionsManager)
@@ -172,6 +194,7 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
     if (FOptionsManager && ANodeId==OPN_USERTUNE)
     {
         widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
+        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_TAG_FORMAT),tr("Tag format:"),AParent));
 
     }
     return widgets;
@@ -180,14 +203,55 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
 
 void UserTuneHandler::onOptionsOpened()
 {
-//        onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
+    onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
+    onOptionsChanged(Options::node(OPV_UT_TAG_FORMAT));
 }
 
 void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
     if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
         setContactLabel();
+    else if (ANode.path() == OPV_UT_TAG_FORMAT)
+        FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
     }
+
+
+void UserTuneHandler::onShowNotification(const QString &AContactJid)
+{
+    if (FNotifications && FNotifications->notifications().isEmpty() && !FContactTune.value(AContactJid).isEmpty())
+    {
+        INotification notify;
+        notify.kinds = FNotifications->enabledTypeNotificationKinds(NNT_USERTUNE);
+        if ((notify.kinds & (INotification::PopupWindow))>0)
+        {
+            notify.typeId = NNT_USERTUNE;
+            notify.data.insert(NDR_ICON,IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC));
+            notify.data.insert(NDR_POPUP_CAPTION,tr("User Tune Notification"));
+            notify.data.insert(NDR_POPUP_TITLE,AContactJid);
+            notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(AContactJid));
+
+            notify.data.insert(NDR_POPUP_HTML,returnTagFormat(AContactJid));
+
+            FNotifies.insert(FNotifications->appendNotification(notify),AContactJid);
+        }
+    }
+}
+
+void UserTuneHandler::onNotificationActivated(int ANotifyId)
+{
+    if (FNotifies.contains(ANotifyId))
+    {
+        FNotifications->removeNotification(ANotifyId);
+    }
+}
+
+void UserTuneHandler::onNotificationRemoved(int ANotifyId)
+{
+    if (FNotifies.contains(ANotifyId))
+    {
+        FNotifies.remove(ANotifyId);
+    }
+}
 
 bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
 {
@@ -322,6 +386,7 @@ void UserTuneHandler::setContactTune(const QString &AContactJid, const UserTune 
             FContactTune.remove(AContactJid);
     }
     setContactLabel();
+    onShowNotification(AContactJid);
 }
 
 void UserTuneHandler::setContactLabel()
@@ -341,6 +406,15 @@ void UserTuneHandler::setContactLabel()
     }
 }
 
+QString UserTuneHandler::returnTagFormat(QString contactJid)
+{
+    FTag = FFormatTag;
+    FTag.replace(QString("%A"), Qt::escape(FContactTune.value(contactJid).artist));
+    FTag.replace(QString("%T"), Qt::escape(FContactTune.value(contactJid).title));
+    FTag.replace(QString("%S"), Qt::escape(FContactTune.value(contactJid).source));
+    return FTag;
+}
+
 void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips)
 {
     if (ALabelId==RLID_DISPLAY || ALabelId==FUserTuneLabelId)
@@ -348,7 +422,7 @@ void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, 
         QString contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
         if (!FContactTune.value(contactJid).isEmpty())
         {
-            QString tip = QString("%1 <div style='margin-left:10px;'>%2 - %3<br>%4 %5</div>").arg(tr("Listen:")).arg(FContactTune.value(contactJid).artist).arg(FContactTune.value(contactJid).title).arg(tr("Album ")).arg(FContactTune.value(contactJid).source);
+            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(returnTagFormat(contactJid).replace("\n","<br>"));
             AToolTips.insert(RTTO_USERTUNE,tip);
         }
     }

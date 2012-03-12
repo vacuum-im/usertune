@@ -6,16 +6,17 @@
 
 
 //Notification Types
-//#define NNT_USERTUNE_NOTIFY                 "UserTuneNotify"
+#define NNT_USERTUNE                 "UserTuneNotify"
 
 //Notification Type Orders
-//#define NTO_GMAIL_NOTIFY                 275
+#define NTO_USERTUNE_NOTIFY                 275
 
 //Menu Icons
 #define MNI_USERTUNE_MUSIC                 "usertuneMusic"
 
 //Options
 #define OPV_UT_SHOW_ROSTER_LABEL            "show-roster-label"
+#define OPV_UT_TAG_FORMAT			"usertune.tag-format"
 
 //Opton Nodes
 #define OPN_USERTUNE                       "UserTune"

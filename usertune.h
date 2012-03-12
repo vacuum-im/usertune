@@ -27,10 +27,14 @@
 #include <interfaces/iservicediscovery.h>
 #include <interfaces/ixmppstreams.h>
 #include <interfaces/ioptionsmanager.h>
+#include <interfaces/inotifications.h>
 #include <interfaces/iroster.h>
 #include <interfaces/irostersmodel.h>
 #include <interfaces/irostersview.h>
 
+#include <definitions/notificationtypes.h>
+#include <definitions/notificationdataroles.h>
+#include <definitions/notificationtypeorders.h>
 #include <definitions/menuicons.h>
 #include <definitions/resources.h>
 #include <definitions/rosterlabelorders.h>
@@ -109,11 +113,15 @@ protected slots:
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
     void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
+    void onShowNotification(const QString &AContactJid);
+    void onNotificationActivated(int ANotifyId);
+    void onNotificationRemoved(int ANotifyId);
     void onApplicationQuit();
 
 protected:
     void setContactTune(const QString &AContactJid, const UserTune &ASong);
     void setContactLabel();
+    QString returnTagFormat(QString);
 
 private:
     IPEPManager *FPEPManager;
@@ -123,14 +131,18 @@ private:
     IRosterPlugin *FRosterPlugin;
     IRostersModel *FRostersModel;
     IRostersViewPlugin *FRostersViewPlugin;
+    INotifications *FNotifications;
     MprisFetcher *FMprisFetcher;
 
     QStringList FPlayers;
     QString nodeName;
     int handlerId;
     int FUserTuneLabelId;
+    QString FFormatTag;
+    QString FTag;
 
     QMap<QString, UserTune> FContactTune;
+    QMap<int,Jid> FNotifies;
 };
 
 #endif // USERTUNE_H
