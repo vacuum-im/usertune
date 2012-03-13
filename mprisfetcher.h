@@ -47,7 +47,7 @@ public slots:
 
 protected slots:
     void onTrackChange(QVariantMap m_metadata);
-    void onStatusChange(int PlayStatus_, int PlayOrder_,  int PlayRepeat_, int StopOnce_);
+    void onStatusChange(PlayerStatus m_pstatus);
 
 };
 

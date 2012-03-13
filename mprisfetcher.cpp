@@ -27,7 +27,7 @@ MprisFetcher::~MprisFetcher()
                 "StatusChange",
                 "(iiii)",
                 this,
-                SLOT (onStatusChange(int, int, int, int)));
+                SLOT (onStatusChange(PlayerStatus)));
         delete m_player;
     }
 }
@@ -60,7 +60,7 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "StatusChange",
                 "(iiii)",
                 this,
-                SLOT (onStatusChange(int, int, int, int)));
+                SLOT (onStatusChange(PlayerStatus)));
         delete m_player;
     }
     m_player = new QDBusInterface("org.mpris." + playerName, "/Player",
@@ -84,7 +84,7 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "StatusChange",
                 "(iiii)",
                 this,
-                SLOT (onStatusChange(int, int, int, int)));
+                SLOT (onStatusChange(PlayerStatus)));
     qDebug() << "status connect: " << test;
     QDBusReply<QVariantMap> m_metadata = m_player->call("GetMetadata");
     QVariantMap trackInfo = m_metadata.value();
@@ -124,9 +124,9 @@ void MprisFetcher::onTrackChange(QVariantMap trackInfo)
 
 }
 
-void MprisFetcher::onStatusChange(int PlayStatus_, int PlayOrder_,  int PlayRepeat_, int StopOnce_)
+void MprisFetcher::onStatusChange(PlayerStatus m_pstatus)
 {
-    qDebug() << PlayStatus_;
-    if (PlayStatus_ == PSStopped)
+    qDebug() << m_pstatus.PlayStatus_;
+    if (m_pstatus.PlayStatus_ == PSStopped)
         emit playerStoped();
 }

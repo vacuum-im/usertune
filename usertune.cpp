@@ -124,24 +124,23 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 
 bool UserTuneHandler::initObjects()
 {
+    handlerId = FPEPManager->insertNodeHandler(TUNE_PROTOCOL_URL, this);
+
+    IDiscoFeature feature;
+    feature.active = true;
+    feature.name = tr("User tune");
+    feature.var = TUNE_PROTOCOL_URL;
+
+    FServiceDiscovery->insertDiscoFeature(feature);
+
+    feature.name = tr("User tune notification");
+    feature.var = TUNE_NOTIFY_PROTOCOL_URL;
+    FServiceDiscovery->insertDiscoFeature(feature);
 
     FPlayers = FMprisFetcher->getPlayers();
     if (!FPlayers.isEmpty())
     {
         FMprisFetcher->setPlayer(FPlayers.first());
-
-        handlerId = FPEPManager->insertNodeHandler(TUNE_PROTOCOL_URL, this);
-
-        IDiscoFeature feature;
-        feature.active = true;
-        feature.name = tr("User tune");
-        feature.var = TUNE_PROTOCOL_URL;
-
-        FServiceDiscovery->insertDiscoFeature(feature);
-
-        feature.name = tr("User tune notification");
-        feature.var = TUNE_NOTIFY_PROTOCOL_URL;
-        FServiceDiscovery->insertDiscoFeature(feature);
 
         QObject::connect(FMprisFetcher, SIGNAL(trackChanged(QVariantMap)), this, SLOT(onTrackChanged(QVariantMap)));
         QObject::connect(FMprisFetcher, SIGNAL(playerStoped()), this, SLOT(onStopPublishing()));
