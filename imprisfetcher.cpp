@@ -46,24 +46,24 @@ QString IMprisFetcher::secToTime(int secs) {
     return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
 }
 
-QString IMprisFetcher::formatMetadata(QVariantMap &trackInfo) {
+QString IMprisFetcher::formatMetadata(QVariantMap &ATrackInfo,QString  const &AFormat) {
     QRegExp rx("%(\\w+-?\\w+)");
 
     QString outText;
     int srPos = 0;
     int cpPos = 0;
 
-    if (FLineFormat.contains("time")) {
-        trackInfo["time"] = secToTime(trackInfo["time"].toInt());
+    if (AFormat.contains("time")) {
+        ATrackInfo["time"] = secToTime(trackInfo["time"].toInt());
     }
 
-    while ( (srPos = rx.indexIn(FLineFormat,srPos)) != -1 ) {
-        outText.append(FLineFormat.mid(cpPos,srPos - cpPos)).append(trackInfo.contains(rx.cap(1)) ? trackInfo[rx.cap(1)].toString() : " " );
+    while ( (srPos = rx.indexIn(AFormat,srPos)) != -1 ) {
+        outText.append(AFormat.mid(cpPos,srPos - cpPos)).append(ATrackInfo.contains(rx.cap(1)) ? ATrackInfo[rx.cap(1)].toString() : " " );
         cpPos = srPos + rx.matchedLength();
         srPos += rx.matchedLength();
     }
 
-    outText.append(FLineFormat.mid(cpPos));
+    outText.append(AFormat.mid(cpPos));
 
     return outText;
 }

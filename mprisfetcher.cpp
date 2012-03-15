@@ -6,6 +6,12 @@ MprisFetcher::MprisFetcher(QObject *parent) :
     QObject(parent)
 {
     playerExist = false;
+    QDBusConnection::sessionBus().connect ("org.freedesktop.DBus",
+                                           "/org/freedesktop/DBus",
+                                           "org.freedesktop.DBus",
+                                           "NameOwnerChanged",
+                                           this,
+                                           SLOT(onPlayersExistenceChanged(QString, QString, QString)));
 }
 
 MprisFetcher::~MprisFetcher()
@@ -19,7 +25,7 @@ MprisFetcher::~MprisFetcher()
                 "TrackChange",
                 "a{sv}",
                 this,
-                SLOT(onTrackChange(QVariantMap)));
+                SLOT(onTrackChanged(QVariantMap)));
         QDBusConnection::sessionBus().disconnect(
                 "org.mpris." + curPlayerName,
                 "/Player",
@@ -27,7 +33,7 @@ MprisFetcher::~MprisFetcher()
                 "StatusChange",
                 "(iiii)",
                 this,
-                SLOT (onStatusChange(int, int, int, int)));
+                SLOT (onStatusChanged(int, int, int, int)));
         delete m_player;
     }
 }
@@ -52,7 +58,7 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "TrackChange",
                 "a{sv}",
                 this,
-                SLOT(onTrackChange(QVariantMap)));
+                SLOT(onTrackChanged(QVariantMap)));
         QDBusConnection::sessionBus().disconnect(
                 "org.mpris." + curPlayerName,
                 "/Player",
@@ -60,7 +66,7 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "StatusChange",
                 "(iiii)",
                 this,
-                SLOT (onStatusChange(int, int, int, int)));
+                SLOT (onStatusChanged(int, int, int, int)));
         delete m_player;
     }
     m_player = new QDBusInterface("org.mpris." + playerName, "/Player",
@@ -76,7 +82,7 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "TrackChange",
                 "a{sv}",
                 this,
-                SLOT(onTrackChange(QVariantMap)));
+                SLOT(onTrackChanged(QVariantMap)));
     bool test = QDBusConnection::sessionBus().connect(
                 "org.mpris." + playerName,
                 "/Player",
@@ -84,7 +90,7 @@ QString MprisFetcher::setPlayer(QString playerName)
                 "StatusChange",
                 "(iiii)",
                 this,
-                SLOT (onStatusChange(int, int, int, int)));
+                SLOT (onStatusChanged(int, int, int, int)));
     qDebug() << "status connect: " << test;
     QDBusReply<QVariantMap> m_metadata = m_player->call("GetMetadata");
     QVariantMap trackInfo = m_metadata.value();
@@ -104,7 +110,7 @@ void MprisFetcher::setFormat(const QString &format)
     m_format = format;
 }
 
-void MprisFetcher::onTrackChange(QVariantMap trackInfo)
+void MprisFetcher::onTrackChanged(QVariantMap trackInfo)
 {
 //    QRegExp rx("%(\\w+-?\\w+)");
 
@@ -124,9 +130,69 @@ void MprisFetcher::onTrackChange(QVariantMap trackInfo)
 
 }
 
-void MprisFetcher::onStatusChange(int PlayStatus_, int PlayOrder_,  int PlayRepeat_, int StopOnce_)
+void MprisFetcher::onStatusChanged(int PlayStatus_, int PlayOrder_,  int PlayRepeat_, int StopOnce_)
 {
     qDebug() << PlayStatus_;
     if (PlayStatus_ == PSStopped)
         emit playerStoped();
+}
+
+void MprisFetcher::onPlayersExistenceChanged(QString name, QString, QString newOwner)
+{
+    if (!name.startsWith("org.mpris")) {
+        return;
+    }
+
+
+    // какая непонятная портянка. все перепишу когда доделаю impris fetcher!!!
+    if (!newOwner.isEmpty()) {
+        qDebug() << "Available new player " + name + ".";
+        qDebug() << "newOwner " + newOwner;
+
+        playerExist = curPlayerName.compare(name);
+        if (playerExist) {
+        // завернуть все в одну функцию как в imprisfetcher
+            QDBusConnection::sessionBus().connect(
+                        "org.mpris." + playerName,
+                        "/Player",
+                        "org.freedesktop.MediaPlayer",
+                        "TrackChange",
+                        "a{sv}",
+                        this,
+                        SLOT(onTrackChanged(QVariantMap)));
+            QDBusConnection::sessionBus().connect(
+                        "org.mpris." + playerName,
+                        "/Player",
+                        "org.freedesktop.MediaPlayer",
+                        "StatusChange",
+                        "(iiii)",
+                        this,
+                        SLOT (onStatusChanged(int, int, int, int)));
+        }
+    } else if (newOwner.isEmpty ()) {
+        qDebug() << "Player " + name + "shutdown.";
+        qDebug() << "newOwner " + newOwner;
+
+        playerExist = curPlayerName.compare(name);
+        if (playerExist)
+        {
+            QDBusConnection::sessionBus().disconnect(
+                    "org.mpris." + curPlayerName,
+                    "/Player",
+                    "org.freedesktop.MediaPlayer",
+                    "TrackChange",
+                    "a{sv}",
+                    this,
+                    SLOT(onTrackChanged(QVariantMap)));
+            QDBusConnection::sessionBus().disconnect(
+                    "org.mpris." + curPlayerName,
+                    "/Player",
+                    "org.freedesktop.MediaPlayer",
+                    "StatusChange",
+                    "(iiii)",
+                    this,
+                    SLOT (onStatusChanged(int, int, int, int)));
+            delete m_player;
+        }
+    }
 }

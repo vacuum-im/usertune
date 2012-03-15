@@ -42,8 +42,8 @@ protected slots:
     void onSetFormat(const QString &);
 
 private:
-    static QString secToTime(int secs);
-    /*static*/ QString formatMetadata(QVariantMap &trackInfo);
+    inline QString secToTime(int secs);
+    static QString formatMetadata(QVariantMap &ATrackInfo, const QString &AFormat);
     virtual void startListening();
     virtual void stopListening();
     virtual void onTrackChange(QVariantMap);
