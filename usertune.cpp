@@ -1,5 +1,18 @@
 #include <QDebug>
 
+#include <definitions.h>
+
+#include <definitions/notificationtypes.h>
+#include <definitions/notificationdataroles.h>
+#include <definitions/notificationtypeorders.h>
+#include <definitions/menuicons.h>
+#include <definitions/resources.h>
+#include <definitions/rosterlabelorders.h>
+#include <definitions/rostertooltiporders.h>
+#include <definitions/rosterindextyperole.h>
+
+#include <definitions/optionvalues.h>
+
 #include "usertune.h"
 
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
@@ -22,7 +35,13 @@ bool UserTune::isEmpty() const
 
 bool UserTune::operator==(const UserTune &AUserTune) const
 {
-    return (artist==AUserTune.artist && title==AUserTune.title && source==AUserTune.source && track==AUserTune.track && length==AUserTune.length && rating==AUserTune.rating && uri==AUserTune.uri);
+    return (artist      == AUserTune.artist
+            && title      == AUserTune.title
+            && source  == AUserTune.source
+            && track    == AUserTune.track
+            && length   == AUserTune.length
+            && rating   == AUserTune.rating
+            && uri        == AUserTune.uri);
 }
 
 bool UserTune::operator!=(const UserTune &AUserTune) const

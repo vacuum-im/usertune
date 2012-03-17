@@ -7,12 +7,12 @@
 struct PlayerStatus
 {
     int Play;
-    int Random;
+    int PlayRandom;
     int Repeat;
     int RepeatPlaylist;
 };
 
-enum PlayStatus
+enum PlayingStatus
 {
     PSPlaying = 0,
     PSPaused,
@@ -25,11 +25,13 @@ class IMprisFetcher : public QObject
 public:
     explicit IMprisFetcher(QObject *parent);
     virtual ~IMprisFetcher();
-    static QString getMetadata();
     virtual QStringList getPlayersList();
+    QVariantMap getMetadata();
+    bool isNowPlaying();
 
 signals:
-    void changeStatus(PlayStatus);
+    void statusChanged(PlayingStatus);
+    void trackChanged(QVariantMap);
 
 public slots:
     virtual void playerPlay();
@@ -38,24 +40,19 @@ public slots:
     virtual void playerNext();
     virtual void onPlayerNameChange(const QString &);
 
-protected slots:
-    void onSetFormat(const QString &);
-
-private:
-    inline QString secToTime(int secs);
-    static QString formatMetadata(QVariantMap &ATrackInfo, const QString &AFormat);
-    virtual void startListening();
-    virtual void stopListening();
+private slots:
     virtual void onTrackChange(QVariantMap);
     virtual void onPlayerStatusChange(PlayerStatus);
+    virtual void onPlayersExistenceChanged(QString, QString, QString);
 
 private:
-    QObject FParent;
+    inline QString secToTime(int);
+
+private:
     QString FPlayerName;
     QDBusInterface *FPlayerInterface;
     PlayerStatus FStatus;
-    QString FLineFormat;
-    QMap<QString,QVariant> FTrackInfo;
+    QVariantMap FTrackInfo;
 };
 
 Q_DECLARE_METATYPE(PlayerStatus)

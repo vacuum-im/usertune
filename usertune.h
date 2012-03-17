@@ -20,8 +20,6 @@
 
 #include <QTextDocument>
 
-#include <definitions.h>
-
 #include <interfaces/ipluginmanager.h>
 #include <interfaces/ipepmanager.h>
 #include <interfaces/iservicediscovery.h>
@@ -32,16 +30,6 @@
 #include <interfaces/irostersmodel.h>
 #include <interfaces/irostersview.h>
 
-#include <definitions/notificationtypes.h>
-#include <definitions/notificationdataroles.h>
-#include <definitions/notificationtypeorders.h>
-#include <definitions/menuicons.h>
-#include <definitions/resources.h>
-#include <definitions/rosterlabelorders.h>
-#include <definitions/rostertooltiporders.h>
-#include <definitions/rosterindextyperole.h>
-
-#include <definitions/optionvalues.h>
 #include <utils/options.h>
 
 #include "mprisfetcher.h"

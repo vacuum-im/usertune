@@ -7,7 +7,7 @@
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
 
-enum PlayStatus
+enum PlayingStatus
 {
     PSPlaying = 0,
     PSPaused,

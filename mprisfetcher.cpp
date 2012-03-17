@@ -130,7 +130,7 @@ void MprisFetcher::onTrackChanged(QVariantMap trackInfo)
 
 }
 
-void MprisFetcher::onStatusChanged(PlayStatus m_pstatus)
+void MprisFetcher::onStatusChanged(PlayingStatus m_pstatus)
 {
     qDebug() << m_pstatus.PlayStatus_;
     if (m_pstatus.PlayStatus_ == PSStopped)
