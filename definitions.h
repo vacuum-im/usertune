@@ -17,6 +17,8 @@
 //Options
 #define OPV_UT_SHOW_ROSTER_LABEL            "show-roster-label"
 #define OPV_UT_TAG_FORMAT			"usertune.tag-format"
+#define OPV_UT_PLAYER_NAME			"usertune.player-name"
+#define OPV_UT_PLAYER_VER			"usertune.player-ver"
 
 //Opton Nodes
 #define OPN_USERTUNE                       "UserTune"

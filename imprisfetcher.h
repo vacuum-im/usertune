@@ -4,20 +4,7 @@
 #include <QObject>
 #include <QtDBus/QtDBus>
 
-struct PlayerStatus
-{
-    int Play;
-    int PlayRandom;
-    int Repeat;
-    int RepeatPlaylist;
-};
-
-enum PlayingStatus
-{
-    PSPlaying = 0,
-    PSPaused,
-    PSStopped
-};
+#include "usertunetypes.h"
 
 class IMprisFetcher : public QObject
 {
@@ -27,11 +14,11 @@ public:
     virtual ~IMprisFetcher();
     virtual QStringList getPlayersList() = 0;
     QVariantMap getMetadata();
-    bool isNowPlaying();
+    PlayerStatus getPlayerStatus();
 
 signals:
-    void statusChanged(PlayingStatus);
-    void trackChanged(QVariantMap);
+    void statusChanged(PlayerStatus);
+    void trackChanged(UserTuneData);
 
 public slots:
     virtual void playerPlay() = 0;
@@ -41,18 +28,12 @@ public slots:
     virtual void onPlayerNameChange(const QString &) = 0;
 
 private slots:
-    /* MPRIS v.1 */
-    virtual void onTrackChange(QVariantMap) = 0;
-    virtual void onPlayerStatusChange(PlayerStatus) = 0;
-    /* MPRIS v.2 */
-    virtual void onPropertyChange(QDBusMessage) = 0;
-    /* All */
     virtual void onPlayersExistenceChanged(QString, QString, QString) = 0;
 
-private:
-    inline QString secToTime(int);
+protected:
+    static QString secToTime(int);
 
-private:
+protected:
     QString FPlayerName;
     QDBusInterface *FPlayerInterface;
     PlayerStatus FStatus;

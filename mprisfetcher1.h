@@ -13,8 +13,8 @@ public:
     bool isNowPlaying();
 
 signals:
-    void statusChanged(PlayingStatus);
-    void trackChanged(QVariantMap);
+    void statusChanged(PlayerStatus);
+    void trackChanged(UserTuneData);
 
 public slots:
     virtual void playerPlay();
@@ -24,9 +24,9 @@ public slots:
     virtual void onPlayerNameChange(const QString &);
 
 private slots:
-    virtual void onTrackChange(QVariantMap);
-    virtual void onPlayerStatusChange(PlayerStatus);
-    virtual void onPlayersExistenceChanged(QString, QString, QString);
+    void onTrackChange(QVariantMap);
+    void onPlayerStatusChange(PlayerStatus);
+    void onPlayersExistenceChanged(QString, QString, QString);
 
 private:
     void connectToBus();

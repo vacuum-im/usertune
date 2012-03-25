@@ -10,11 +10,10 @@ public:
     ~MprisFetcher2();
     virtual QStringList getPlayersList();
     QVariantMap getMetadata();
-    bool isNowPlaying();
 
 signals:
-    void statusChanged(PlayingStatus);
-    void trackChanged(QVariantMap);
+    void statusChanged(PlayerStatus);
+    void trackChanged(UserTuneData);
 
 public slots:
     virtual void playerPlay();
@@ -30,6 +29,9 @@ private slots:
 private:
     void connectToBus();
     void disconnectToBus();
+
+private:
+    UserTuneData FUserTuneData;
 };
 
 #endif // MPRISFETCHER2_H

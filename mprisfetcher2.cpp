@@ -5,11 +5,9 @@
 #include "mprisfetcher2.h"
 
 MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName) :
-    IMprisFetcher(parent),
-    FPlayerName(APlayerName)
+    IMprisFetcher(parent)
 {
-    qDBusRegisterMetaType<PlayerStatus>();
-
+    FPlayerName = APlayerName;
     FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
                                           "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
 
@@ -50,15 +48,10 @@ void MprisFetcher2::disconnectToBus()
 QStringList MprisFetcher2::getPlayersList()
 {
     QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.MediaPlayer2.");
-    QStringList ret_list;
+    services.replaceInStrings("org.mpris.MediaPlayer2.","");
+    services.removeDuplicates();
 
-    foreach (QString service, services) {
-        if (service.startsWith("org.mpris.MediaPlayer2.")) {
-            ret_list << service.replace("org.mpris.MediaPlayer2.","");
-        }
-    }
-
-    return ret_list;
+    return services;
 }
 
 void MprisFetcher2::playerPlay()
@@ -105,29 +98,102 @@ void MprisFetcher2::playerNext()
     Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
 }
 
-void MprisFetcher2::onPropertyChange(QDBusMessage msg)
-{
+void MprisFetcher2::onPlayerNameChange(const QString &AName) {
+    FPlayerName = AName;
 
+    if (FPlayerInterface && FPlayerInterface->isValid()) {
+        disconnectToBus();
+        delete FPlayerInterface;
+    }
+
+    FPlayerInterface = new QDBusInterface("org.mpris.MediaPlayer2." + FPlayerName, "/Player",
+                                  "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
+    // getStatus
+    // if status != PSStoped { emit }
+
+    connectToBus();
 }
 
-void MprisFetcher2::onPlayersExistenceChanged(QString name, QString /*empty*/, QString /*newOwner*/)
+void MprisFetcher2::onPropertyChange(QDBusMessage msg)
+{
+    QDBusArgument arg = msg.arguments().at(1).value<QDBusArgument>();
+    const QVariantMap& map = qdbus_cast<QVariantMap>(arg);
+
+    QVariant v = map.value("Metadata");
+    if (v.isValid())
+    {
+        arg = v.value<QDBusArgument>();
+        FTrackInfo = qdbus_cast<QVariantMap>(arg);
+        UserTuneData data;
+
+        if (FTrackInfo.contains("xesam:artist")) {
+            data.artist =  FTrackInfo["xesam:artist"].toString();
+        }
+        if (FTrackInfo.contains("mpris:length")) {
+            data.length = FTrackInfo["mpris:length"].toLongLong() / 1000000;
+        }
+        if (FTrackInfo.contains("xesam:userRating")) {
+            data.rating = FTrackInfo["xesam:userRating"].toInt();
+        }
+        if (FTrackInfo.contains("xesam:album")) {
+            data.source =  FTrackInfo["xesam:album"].toString();
+        }
+        if (FTrackInfo.contains("xesam:title")) {
+            data.title =  FTrackInfo["xesam:title"].toString();
+        }
+        if (FTrackInfo.contains("xesam:trackNumber")) {
+            data.track = FTrackInfo["xesam:trackNumber"].toString();
+        }
+        if (FTrackInfo.contains("xesam:url")) {
+            data.uri = FTrackInfo["xesam:url"].toUrl();
+        }
+
+        if (data != FUserTuneData) {
+            FUserTuneData = data;
+            emit trackChanged(data);
+        }
+    }
+
+    v = map.value("PlaybackStatus");
+    if (v.isValid())
+    {
+        QString sStatus = v.toString();
+        PlayerStatus pStatus;
+        if (sStatus == "Playing") {
+            pStatus.Play = PSPlaying;
+        } else if (sStatus == "Paused") {
+            pStatus.Play = PSPaused;
+        } else if (sStatus == "Stopped") {
+            pStatus.Play = PSStopped;
+        }
+
+        if (FStatus != pStatus) {
+            FStatus = pStatus;
+            emit statusChanged(FStatus);
+        }
+    }
+}
+
+void MprisFetcher2::onPlayersExistenceChanged(QString name, QString /*empty*/, QString newOwner)
 {
     if (!name.startsWith("org.mpris.MediaPlayer2.")) {
         return;
     }
     QString newPlayer = name.replace("org.mpris.MediaPlayer2.","");
 
-    if (!newOwner.isEmpty()) {
-        if (playerName.compare(newPlayer)) {
-            playerChange(newPlayer);
+    bool player_closed = newOwner.isEmpty();
+    if (!player_closed) {
+        if (FPlayerName == newPlayer) {
+            onPlayerNameChange(newPlayer);
         }
-    } else if (newOwner.isEmpty ()) {
-        if (playerName.compare(newPlayer))
+    } else {
+        if (FPlayerName == newPlayer)
         {
             disconnectToBus();
             delete FPlayerInterface;
+
+            FStatus.Play == PSStopped;
+            emit statusChanged(FStatus);
         }
     }
-
-    Q_ASSERT_X(false, "need to send signal");
 }

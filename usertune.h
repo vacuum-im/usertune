@@ -32,7 +32,8 @@
 
 #include <utils/options.h>
 
-#include "mprisfetcher.h"
+#include "imprisfetcher.h"
+#include "usertunetypes.h"
 
 #ifdef SVNINFO
 #  include "svninfo.h"
@@ -43,32 +44,14 @@
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 #define PEP_USERTUNE              4000
 
-class UserTune
-{
-public:
-    UserTune();
-    ~UserTune();
-    bool isEmpty() const;
-    bool operator ==(const UserTune &AUserTune) const;
-    bool operator !=(const UserTune &AUserTune) const;
-
-    QString artist;
-    QString source;
-    QString title;
-    QString track;
-    int length;
-    int rating;
-    QUrl uri;
-};
-
 class UserTuneHandler :
     public QObject,
     public IPlugin,
     public IOptionsHolder,
     public IPEPHandler
 {
-    Q_OBJECT;
-    Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler);
+    Q_OBJECT
+    Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 public:
     UserTuneHandler();
     ~UserTuneHandler();
@@ -95,8 +78,9 @@ public:
     virtual bool processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza);
 
 protected slots:
-    void onTrackChanged(QVariantMap trackInfo);
+    void onTrackChanged(UserTuneData);
     void onStopPublishing();
+    void onPlayerSatusChanged(PlayingStatus);
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
@@ -107,7 +91,7 @@ protected slots:
     void onApplicationQuit();
 
 protected:
-    void setContactTune(const QString &AContactJid, const UserTune &ASong);
+    void setContactTune(const QString &AContactJid, const UserTuneData &ASong);
     void setContactLabel();
     QString returnTagFormat(QString);
 
@@ -120,7 +104,7 @@ private:
     IRostersModel *FRostersModel;
     IRostersViewPlugin *FRostersViewPlugin;
     INotifications *FNotifications;
-    MprisFetcher *FMprisFetcher;
+    IMprisFetcher *FMprisFetcher;
 
     QStringList FPlayers;
     QString nodeName;
@@ -129,7 +113,7 @@ private:
     QString FFormatTag;
     QString FTag;
 
-    QMap<QString, UserTune> FContactTune;
+    QMap<QString, UserTuneData> FContactTune;
     QMap<int,Jid> FNotifies;
 };
 

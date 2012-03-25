@@ -23,18 +23,23 @@ IMprisFetcher::~IMprisFetcher()
                                            SLOT(onPlayersExistenceChanged(QString, QString, QString)));
 }
 
+PlayerStatus IMprisFetcher::getPlayerStatus()
+{
+    if (!FPlayerInterface || !FPlayerInterface->isValid())
+    {
+        FStatus.Play = PSStopped;
+    }
+
+    return FStatus;
+}
+
 QVariantMap IMprisFetcher::getMetadata() {
-    if (FPlayerInterface && FPlayerInterface->isValid() && FTrackInfo.isValid())
+    if (FPlayerInterface && FPlayerInterface->isValid())
     {
         return FTrackInfo;
     } else {
         return QVariantMap();
     }
-}
-
-bool IMprisFetcher::isNowPlaying()
-{
-    return FStatus.Play == PlayerStatus::Play;
 }
 
 QString IMprisFetcher::secToTime(int secs) {

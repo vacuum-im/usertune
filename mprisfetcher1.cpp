@@ -27,11 +27,11 @@ const QDBusArgument &operator>> (const QDBusArgument &arg, PlayerStatus &ps)
 }
 
 MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName) :
-    IMprisFetcher(parent),
-    FPlayerName(APlayerName)
+    IMprisFetcher(parent)
 {
     qDBusRegisterMetaType<PlayerStatus>();
 
+    FPlayerName = APlayerName;
     FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
                                           "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
 
@@ -43,7 +43,10 @@ MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName) :
     }
 
     QDBusReply<QVariantMap> metadata = FPlayerInterface->call("GetMetadata");
-    FTrackInfo = metadata.value();
+    if (metadata.isValid()) {
+        FTrackInfo = metadata.value();
+        onTrackChange(FTrackInfo);
+    }
 
    QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
     onPlayerStatusChange(status);
@@ -154,43 +157,77 @@ void MprisFetcher1::playerNext()
     Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
 }
 
+void MprisFetcher1::onPlayerNameChange(const QString &AName) {
+    FPlayerName = AName;
+
+    if (FPlayerInterface && FPlayerInterface->isValid()) {
+        disconnectToBus();
+        delete FPlayerInterface;
+    }
+
+    FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
+                                  "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
+    connectToBus();
+}
+
 void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
 {
+    UserTuneData data;
+    if (trackInfo.contains("artist")) {
+        data.artist =  trackInfo["artist"].toString();
+    }
+    if (trackInfo.contains("time")) {
+        data.length = trackInfo["time"].toInt();
+    }
+    if (trackInfo.contains("rating")) {
+        data.rating = trackInfo["artist"].toInt();
+    }
+    if (trackInfo.contains("album")) {
+        data.source =  trackInfo["album"].toString();
+    }
+    if (trackInfo.contains("title")) {
+        data.title =  trackInfo["title"].toString();
+    }
+    if (trackInfo.contains("tracknumber")) {
+        data.track = trackInfo["tracknumber"].toString();
+    }
+    if (trackInfo.contains("location")) {
+        data.uri = trackInfo["location"].toUrl();
+    }
+
     trackInfo["time"] = secToTime(trackInfo["time"].toInt());
     FTrackInfo = trackInfo;
 
-    emit trackChanged(FTrackInfo);
+    emit trackChanged(data);
 }
 
 void MprisFetcher1::onPlayerStatusChange(PlayerStatus status)
 {
-    FStatus.Play = status.Play;
-    FStatus.PlayRandom = status.PlayRandom;
-    FStatus.Repeat = status.Repeat;
-    FStatus.RepeatPlaylist = status.RepeatPlaylist;
+    FStatus = status;
 
     emit statusChanged(FStatus);
 }
 
-void MprisFetcher1::onPlayersExistenceChanged(QString name, QString /*empty*/, QString /*newOwner*/)
+void MprisFetcher1::onPlayersExistenceChanged(QString name, QString /*empty*/, QString newOwner)
 {
     if (!name.startsWith("org.mpris.") || name.startsWith("org.mpris.MediaPlayer2.")) {
         return;
     }
     QString newPlayer = name.replace("org.mpris.","");
 
-    if (!newOwner.isEmpty()) {
-        if (playerName.compare(newPlayer)) {
-            playerChange(newPlayer);
+    bool player_closed = newOwner.isEmpty();
+    if (!player_closed) {
+        if (FPlayerName == newPlayer) {
+            onPlayerNameChange(newPlayer);
         }
-    } else if (newOwner.isEmpty ()) {
-        if (playerName.compare(newPlayer))
+    } else {
+        if (FPlayerName == newPlayer)
         {
             disconnectToBus();
             delete FPlayerInterface;
+
+            FStatus.Play = PSStopped;
+            emit statusChanged(FStatus);
         }
     }
-
-    Q_ASSERT(false);
-    // пускать сигнал
 }
