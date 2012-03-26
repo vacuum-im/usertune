@@ -37,8 +37,8 @@ elseif (UNIX)
 	include_directories("${CMAKE_INSTALL_PREFIX}/include/${INSTALL_APP_DIR}")
 endif (WIN32)
 
-set(SOURCES usertune.cpp mprisfetcher.cpp)
-set(HEADERS usertune.h mprisfetcher.h)
+set(SOURCES usertune.cpp imprisfetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp)
+set(HEADERS usertune.h imprisfetcher.h mprisfetcher1.h mprisfetcher2.h usertunetypes.h)
 
 qt4_wrap_cpp(MOC_SOURCES ${HEADERS})
 qt4_add_resources(RCC_SOURCES ${RCCS})

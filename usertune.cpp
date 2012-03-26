@@ -2,7 +2,7 @@
 #  include <QDebug>
 #endif
 
-#include <definitions.h>
+#include "definitions.h"
 
 #include <definitions/notificationtypes.h>
 #include <definitions/notificationdataroles.h>

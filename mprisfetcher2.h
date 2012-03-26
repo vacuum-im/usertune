@@ -5,6 +5,7 @@
 
 class MprisFetcher2 : public IMprisFetcher
 {
+    Q_OBJECT
 public:
     MprisFetcher2(QObject *parent, const QString &APlayerName);
     ~MprisFetcher2();
