@@ -8,4 +8,5 @@ SOURCES = usertune.cpp\
         #mprisfetcher.cpp\
         imprisfetcher.cpp\
         mprisfetcher1.cpp \
-    mprisfetcher2.cpp
+    mprisfetcher2.cpp \
+    usertunetypes.cpp

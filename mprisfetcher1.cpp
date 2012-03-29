@@ -54,6 +54,11 @@ MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName) :
     connectToBus();
 }
 
+MprisFetcher1::~MprisFetcher1()
+{
+    disconnectToBus();
+}
+
 void MprisFetcher1::connectToBus()
 {
     QDBusConnection::sessionBus().connect(
@@ -73,6 +78,7 @@ void MprisFetcher1::connectToBus()
                 "(iiii)",
                 this,
                 SLOT(onPlayerStatusChange(PlayerStatus)));
+
     Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
 }
 

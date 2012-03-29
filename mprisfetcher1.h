@@ -9,9 +9,9 @@ class MprisFetcher1 : public IMprisFetcher
 public:
     MprisFetcher1(QObject *parent, const QString &APlayerName);
     ~MprisFetcher1();
-    virtual QStringList getPlayersList();
     QVariantMap getMetadata();
-    bool isNowPlaying();
+    PlayerStatus getPlayerStatus();
+    virtual QStringList getPlayersList();
 
 signals:
     void statusChanged(PlayerStatus);
@@ -27,7 +27,7 @@ public slots:
 private slots:
     void onTrackChange(QVariantMap);
     void onPlayerStatusChange(PlayerStatus);
-    void onPlayersExistenceChanged(QString, QString, QString);
+    virtual void onPlayersExistenceChanged(QString, QString, QString);
 
 private:
     void connectToBus();

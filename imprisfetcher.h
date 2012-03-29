@@ -27,7 +27,7 @@ public slots:
     virtual void playerNext() = 0;
     virtual void onPlayerNameChange(const QString &) = 0;
 
-private slots:
+protected slots:
     virtual void onPlayersExistenceChanged(QString, QString, QString) = 0;
 
 protected:

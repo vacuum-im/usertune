@@ -6,23 +6,9 @@
 
 struct PlayerStatus
 {
-    bool operator ==(const PlayerStatus &APlayerStatus) const {
-        return (Play == APlayerStatus.Play
-                && PlayRandom == APlayerStatus.PlayRandom
-                && Repeat == APlayerStatus.Repeat
-                && RepeatPlaylist == APlayerStatus.RepeatPlaylist);
-    }
-
-    bool operator !=(const PlayerStatus &APlayerStatus) const { return !operator==(APlayerStatus); }
-
-    PlayerStatus &operator =(const PlayerStatus &APlayerStatus) {
-        Play = APlayerStatus.Play;
-        PlayRandom = APlayerStatus.PlayRandom;
-        Repeat = APlayerStatus.Repeat;
-        RepeatPlaylist = APlayerStatus.RepeatPlaylist;
-
-        return *this;
-    }
+    bool operator ==(const PlayerStatus &APlayerStatus) const;
+    bool operator !=(const PlayerStatus &APlayerStatus) const;
+    PlayerStatus &operator =(const PlayerStatus &APlayerStatus);
 
     int Play;
     int PlayRandom;
@@ -44,32 +30,10 @@ enum MprisVer {
 
 struct UserTuneData
 {
-    bool isEmpty() const { return artist.isEmpty() && source.isEmpty() && title.isEmpty() && track.isEmpty() && uri.isEmpty(); }
-
-    bool operator ==(const UserTuneData &AUserTune) const
-    {
-        return (artist      == AUserTune.artist
-                && title      == AUserTune.title
-                && source  == AUserTune.source
-                && track    == AUserTune.track
-                && length   == AUserTune.length
-                && rating   == AUserTune.rating
-                && uri        == AUserTune.uri);
-    }
-
-    bool operator !=(const UserTuneData &AUserTune) const { return !operator==(AUserTune); }
-
-    UserTuneData &operator =(const UserTuneData &AUserTune) {
-        artist = AUserTune.artist;
-        source = AUserTune.source;
-        title = AUserTune.title;
-        track = AUserTune.track;
-        length = AUserTune.length;
-        rating = AUserTune.rating;
-        uri = AUserTune.uri;
-
-        return *this;
-    }
+    bool isEmpty() const;
+    bool operator ==(const UserTuneData &AUserTune) const;
+    bool operator !=(const UserTuneData &AUserTune) const;
+    UserTuneData &operator =(const UserTuneData &AUserTune);
 
     QString artist;
     QString source;

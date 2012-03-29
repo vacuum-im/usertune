@@ -24,6 +24,11 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName) :
     connectToBus();
 }
 
+MprisFetcher2::~MprisFetcher2()
+{
+    disconnectToBus();
+}
+
 void MprisFetcher2::connectToBus()
 {
     QDBusConnection::sessionBus().connect(
@@ -192,7 +197,7 @@ void MprisFetcher2::onPlayersExistenceChanged(QString name, QString /*empty*/, Q
             disconnectToBus();
             delete FPlayerInterface;
 
-            FStatus.Play == PSStopped;
+            FStatus.Play = PSStopped;
             emit statusChanged(FStatus);
         }
     }
