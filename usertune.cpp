@@ -26,21 +26,10 @@ UserTuneHandler::UserTuneHandler() :
     FPEPManager(NULL),
     FServiceDiscovery(NULL),
     FXmppStreams(NULL),
-    FOptionsManager(NULL)
+    FOptionsManager(NULL),
+    FMprisFetcher(NULL)
 {
-    switch (Options::node(OPV_UT_PLAYER_VER).value().toInt()) {
-#ifdef Q_WS_X11
-    case mprisV2:
-        FMprisFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
-        break;
-    case mprisV1:
-        FMprisFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
-        break;
-#endif
-    default:
-        FMprisFetcher = NULL;
-        break;
-    }
+
 }
 
 UserTuneHandler::~UserTuneHandler()
@@ -141,8 +130,27 @@ bool UserTuneHandler::initObjects()
     feature.var = TUNE_NOTIFY_PROTOCOL_URL;
     FServiceDiscovery->insertDiscoFeature(feature);
 
+    int v = Options::node(OPV_UT_PLAYER_VER).value().toInt();
+    QString player = Options::node(OPV_UT_PLAYER_NAME).value().toString();
+
+    qDebug() << "Version from settings: " + v;
+    qDebug() << "Player name from settings:" + player;
+
+    switch (v) {
+#ifdef Q_WS_X11
+    case mprisV2:
+        FMprisFetcher = new MprisFetcher2(this, player);
+        break;
+    case mprisV1:
+        FMprisFetcher = new MprisFetcher1(this, player);
+        break;
+#endif
+    default:
+        break;
+    }
+
     QObject::connect(FMprisFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
-    QObject::connect(FMprisFetcher, SIGNAL(statusChanged(PlayingStatus)), this, SLOT(onPlayerSatusChanged(PlayingStatus)));
+    QObject::connect(FMprisFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
 
     FPlayers = FMprisFetcher->getPlayersList();
 #ifndef NO_QT_DEBUG
@@ -181,7 +189,7 @@ bool UserTuneHandler::initSettings()
 #ifdef Q_WS_X11
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,"amarok");
 #elif Q_WS_WIN
-// TODO: сделать для windows
+    // TODO: сделать для windows
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,"");
 #endif
 #ifdef Q_WS_X11
@@ -220,12 +228,16 @@ void UserTuneHandler::onOptionsOpened()
 
 void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
-    if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
+    if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL) {
         setContactLabel();
-    else if (ANode.path() == OPV_UT_TAG_FORMAT)
+    } else if (ANode.path() == OPV_UT_TAG_FORMAT) {
         FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
+    } else if (ANode.path() == OPV_UT_PLAYER_NAME) {
+        FMprisFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+    } else if (ANode.path() == OPV_UT_PLAYER_VER) {
+        // TODO: доделать
     }
-
+}
 
 void UserTuneHandler::onShowNotification(const QString &AContactJid)
 {
@@ -303,7 +315,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
                         if (!titleElem.isNull())
                         {
                             userSong.title = titleElem.text();
-//                            song.append(QString(" - %1").arg(titleElem.text()));
+                            //                            song.append(QString(" - %1").arg(titleElem.text()));
                         }
 
                         QDomElement sourceElem = tuneElem.firstChildElement("source");
@@ -311,7 +323,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
                         if (!sourceElem.isNull())
                         {
                             userSong.source = sourceElem.text();
-//                            song.append(QString(" <%1>").arg(sourceElem.text()));
+                            //                            song.append(QString(" <%1>").arg(sourceElem.text()));
                         }
 
                         QDomElement trackElem = tuneElem.firstChildElement("track");
@@ -325,8 +337,6 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
             }
         }
     }
-
-//    qDebug() << senderJid << " listen " << song;
 
     setContactTune(senderJid, userSong);
 
@@ -369,9 +379,9 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
     }
 }
 
-void UserTuneHandler::onPlayerSatusChanged(PlayingStatus status)
+void UserTuneHandler::onPlayerSatusChanged(PlayerStatus status)
 {
-    if (status == PSStopped) {
+    if (status.Play == PSStopped) {
         onStopPublishing();
     }
 }
@@ -397,8 +407,8 @@ void UserTuneHandler::onStopPublishing()
 
 void UserTuneHandler::setContactTune(const QString &AContactJid, const UserTuneData &ASong)
 {
-//    Jid contactJid = AContactJid.pBare();
-    if (FContactTune.value(AContactJid) != ASong)
+    UserTuneData data = FContactTune.value(AContactJid);
+    if (data != ASong)
     {
         if (!ASong.isEmpty())
             FContactTune.insert(AContactJid,ASong);
@@ -419,10 +429,10 @@ void UserTuneHandler::setContactLabel()
         findData.insert(RDR_PREP_BARE_JID,AContactJid);
         foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
 
-        if (!FContactTune.value(AContactJid).isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()) && Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
-            FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
-        else
-            FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+            if (!FContactTune.value(AContactJid).isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()) && Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+                FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+            else
+                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
     }
 }
 
@@ -454,4 +464,3 @@ void UserTuneHandler::onApplicationQuit()
 }
 
 Q_EXPORT_PLUGIN2(plg_pepmanager, UserTuneHandler)
-

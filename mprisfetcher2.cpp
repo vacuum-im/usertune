@@ -4,9 +4,18 @@
 
 #include "mprisfetcher2.h"
 
-MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName) :
+MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QString::Null()) :
     IMprisFetcher(parent)
 {
+    FPlayerInterface = NULL;
+
+    if (APlayerName.isNull() || APlayerName.length() == 0) {
+#ifndef NO_QT_DEBUG
+        qDebug() << "Player name not set.";
+#endif
+        return;
+    }
+
     FPlayerName = APlayerName;
     FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
                                           "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());

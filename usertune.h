@@ -80,7 +80,7 @@ public:
 protected slots:
     void onTrackChanged(UserTuneData);
     void onStopPublishing();
-    void onPlayerSatusChanged(PlayingStatus);
+    void onPlayerSatusChanged(PlayerStatus);
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);

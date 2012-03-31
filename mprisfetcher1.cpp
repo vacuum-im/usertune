@@ -26,10 +26,19 @@ const QDBusArgument &operator>> (const QDBusArgument &arg, PlayerStatus &ps)
     return arg;
 }
 
-MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName) :
+MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QString::Null()) :
     IMprisFetcher(parent)
 {
     qDBusRegisterMetaType<PlayerStatus>();
+
+    FPlayerInterface = NULL;
+
+    if (APlayerName.isNull() || APlayerName.length() == 0) {
+#ifndef NO_QT_DEBUG
+        qDebug() << "Player name not set.";
+#endif
+        return;
+    }
 
     FPlayerName = APlayerName;
     FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
