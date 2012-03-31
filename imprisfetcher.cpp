@@ -33,23 +33,12 @@ PlayerStatus IMprisFetcher::getPlayerStatus()
     return FStatus;
 }
 
-QVariantMap IMprisFetcher::getMetadata() {
+QVariantMap IMprisFetcher::getMetadata()
+{
     if (FPlayerInterface && FPlayerInterface->isValid())
     {
         return FTrackInfo;
     } else {
         return QVariantMap();
     }
-}
-
-QString IMprisFetcher::secToTime(int secs) {
-    int min = 0;
-    int sec = secs;
-
-    while (sec > 60) {
-        ++min;
-        sec -= 60;
-    }
-
-    return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
 }
