@@ -41,11 +41,10 @@ set(SOURCES usertune.cpp imprisfetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp u
 set(HEADERS usertune.h imprisfetcher.h mprisfetcher1.h mprisfetcher2.h usertunetypes.h)
 
 qt4_wrap_cpp(MOC_SOURCES ${HEADERS})
-qt4_add_resources(RCC_SOURCES ${RCCS})
 
 add_translations(TRANSLATIONS ${PLUGIN_NAME} ${HEADERS} ${SOURCES})
 
-add_library(${PLUGIN_NAME} SHARED ${SOURCES} ${MOC_SOURCES} ${RCC_SOURCES} ${TRANSLATIONS} )
+add_library(${PLUGIN_NAME} SHARED ${SOURCES} ${MOC_SOURCES} ${TRANSLATIONS} )
 
 find_library(TARGET_UTILS vacuumutils ${CMAKE_INSTALL_PREFIX})
 target_link_libraries(${PLUGIN_NAME} ${TARGET_UTILS} ${QT_LIBRARIES})
@@ -58,3 +57,5 @@ else (WIN32)
 		LIBRARY DESTINATION "${INSTALL_PLUGINS}"
 		COMPONENT ${PLUGIN_NAME})
 endif (WIN32)
+install(DIRECTORY "resources/menuicons"
+	DESTINATION ${INSTALL_RESOURCES})
