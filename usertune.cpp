@@ -41,7 +41,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
     APluginInfo->name = tr("User Tune Handler");
     APluginInfo->description = tr("Allows hadle user tunes");
-    APluginInfo->version = "0.9.beta";
+    APluginInfo->version = "0.9.2 beta";
     APluginInfo->author = "Crying Angel";
     APluginInfo->homePage = "http://www.vacuum-im.org";
     APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -134,7 +134,7 @@ bool UserTuneHandler::initObjects()
     QString player = Options::node(OPV_UT_PLAYER_NAME).value().toString();
 
     qDebug() << "Version from settings: " + v;
-    qDebug() << "Player name from settings:" + player;
+    qDebug() << "Player name from settings: " + player;
 
     switch (v) {
 #ifdef Q_WS_X11
@@ -184,7 +184,7 @@ bool UserTuneHandler::initObjects()
 
 bool UserTuneHandler::initSettings()
 {
-    Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,true);
+    Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,false);
     Options::setDefaultValue(OPV_UT_TAG_FORMAT,"%T - %A - %S");
 #ifdef Q_WS_X11
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,"amarok");
