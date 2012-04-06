@@ -11,6 +11,7 @@ public:
     ~MprisFetcher1();
     QVariantMap getMetadata();
     PlayerStatus getPlayerStatus();
+    QString getPlayerName() const;
     virtual QStringList getPlayersList();
 
 signals:

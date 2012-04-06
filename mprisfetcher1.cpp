@@ -178,6 +178,7 @@ void MprisFetcher1::onPlayerNameChange(const QString &AName) {
     if (FPlayerInterface && FPlayerInterface->isValid()) {
         disconnectToBus();
         delete FPlayerInterface;
+        FPlayerInterface = NULL;
     }
 
     FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
@@ -240,6 +241,7 @@ void MprisFetcher1::onPlayersExistenceChanged(QString name, QString /*empty*/, Q
         {
             disconnectToBus();
             delete FPlayerInterface;
+            FPlayerInterface = NULL;
 
             FStatus.Play = PSStopped;
             emit statusChanged(FStatus);
