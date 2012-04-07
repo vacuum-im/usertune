@@ -5,7 +5,8 @@
 #include <QUrl>
 
 enum MprisVer {
-    mprisV1 = 0,
+    mprisNone = 0,
+    mprisV1 = 1,
     mprisV2
 };
 

@@ -1,4 +1,4 @@
-#ifndef NO_QT_DEBUG
+#ifndef QT_NO_DEBUG
 #  include <QDebug>
 #endif
 
@@ -130,36 +130,6 @@ bool UserTuneHandler::initObjects()
     feature.var = TUNE_NOTIFY_PROTOCOL_URL;
     FServiceDiscovery->insertDiscoFeature(feature);
 
-    int v = Options::node(OPV_UT_PLAYER_VER).value().toInt();
-    QString player = Options::node(OPV_UT_PLAYER_NAME).value().toString();
-
-    qDebug() << "Version from settings: " + v;
-    qDebug() << "Player name from settings: " + player;
-
-    switch (v) {
-#ifdef Q_WS_X11
-    case mprisV2:
-        FMprisFetcher = new MprisFetcher2(this, player);
-        break;
-    case mprisV1:
-        FMprisFetcher = new MprisFetcher1(this, player);
-        break;
-#endif
-    default:
-        break;
-    }
-
-    QObject::connect(FMprisFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
-    QObject::connect(FMprisFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
-
-    FPlayers = FMprisFetcher->getPlayersList();
-#ifndef NO_QT_DEBUG
-    if (FPlayers.isEmpty())
-    {
-        qWarning() << "No MPRIS capable players detected.";
-    }
-#endif
-
     if (FNotifications)
     {
         INotificationType notifyType;
@@ -224,18 +194,27 @@ void UserTuneHandler::onOptionsOpened()
 {
     onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
     onOptionsChanged(Options::node(OPV_UT_TAG_FORMAT));
+
+    updateFetchers();
 }
 
 void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
-    if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL) {
+    if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
+    {
         setContactLabel();
-    } else if (ANode.path() == OPV_UT_TAG_FORMAT) {
+    }
+    else if (ANode.path() == OPV_UT_TAG_FORMAT)
+    {
         FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
-    } else if (ANode.path() == OPV_UT_PLAYER_NAME) {
+    }
+    else if (ANode.path() == OPV_UT_PLAYER_NAME)
+    {
         FMprisFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
-    } else if (ANode.path() == OPV_UT_PLAYER_VER) {
-        // TODO: доделать
+    }
+    else if (ANode.path() == OPV_UT_PLAYER_VER)
+    {
+        updateFetchers();
     }
 }
 
@@ -273,6 +252,37 @@ void UserTuneHandler::onNotificationRemoved(int ANotifyId)
     if (FNotifies.contains(ANotifyId))
     {
         FNotifies.remove(ANotifyId);
+    }
+}
+
+void UserTuneHandler::updateFetchers()
+{
+    if (FMprisFetcher)
+    {
+        delete FMprisFetcher;
+        FMprisFetcher = NULL;
+    }
+
+    switch (Options::node(OPV_UT_PLAYER_VER).value().toInt()) {
+#ifdef Q_WS_X11
+    case mprisV1:
+        FMprisFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
+        break;
+    case mprisV2:
+        FMprisFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
+        break;
+#elif Q_WS_WIN
+    // for Windows players...
+#endif
+    case mprisNone:
+    default:
+        break;
+    }
+
+    if (FMprisFetcher)
+    {
+        connect(FMprisFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
+        connect(FMprisFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
     }
 }
 
@@ -371,6 +381,10 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
     album.appendChild(t3);
 
     Jid streamJid;
+
+#ifndef QT_NO_DEBUG
+    qDebug() << data.artist + data.source + data.title;
+#endif
 
     for (int i = 0; i < FXmppStreams->xmppStreams().size(); i++)
     {

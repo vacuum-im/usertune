@@ -1,4 +1,4 @@
-#ifndef NO_QT_DEBUG
+#ifndef QT_NO_DEBUG
 #  include <QDebug>
 #endif
 
@@ -10,7 +10,7 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QStri
     FPlayerInterface = NULL;
 
     if (APlayerName.isNull() || APlayerName.length() == 0) {
-#ifndef NO_QT_DEBUG
+#ifndef QT_NO_DEBUG
         qDebug() << "Player name not set.";
 #endif
         return;
@@ -21,7 +21,7 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QStri
                                           "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
 
     if (FPlayerInterface->lastError().type() != QDBusError::NoError) {
-#ifndef NO_QT_DEBUG
+#ifndef QT_NO_DEBUG
         qWarning() << QDBusError::errorString(FPlayerInterface->lastError().type());
 #endif
         return;
@@ -173,7 +173,7 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
             FUserTuneData = data;
             emit trackChanged(data);
         }
-#ifndef NO_QT_DEBUG
+#ifndef QT_NO_DEBUG
     } else {
         qWarning() << "invalid Metadata onPropertyChange(QDBusMessage)";
 #endif
@@ -196,7 +196,7 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
             FStatus = pStatus;
             emit statusChanged(FStatus);
         }
-#ifndef NO_QT_DEBUG
+#ifndef QT_NO_DEBUG
     } else {
         qWarning() << "invalid PlaybackStatus onPropertyChange(QDBusMessage)";
 #endif

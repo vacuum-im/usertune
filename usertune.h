@@ -106,7 +106,6 @@ private:
     INotifications *FNotifications;
     IMprisFetcher *FMprisFetcher;
 
-    QStringList FPlayers;
     QString nodeName;
     int handlerId;
     int FUserTuneLabelId;
@@ -115,6 +114,9 @@ private:
 
     QMap<QString, UserTuneData> FContactTune;
     QMap<int,Jid> FNotifies;
+
+private:
+    void updateFetchers();
 };
 
 #endif // USERTUNE_H
