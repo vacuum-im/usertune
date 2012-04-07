@@ -27,9 +27,7 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QStri
         return;
     }
 
-    QDBusMessage msg = FPlayerInterface->call("GetMetadata");
-    onPropertyChange(msg);
-
+    updateStatus();
     connectToBus();
 }
 
@@ -112,10 +110,17 @@ void MprisFetcher2::playerNext()
     Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
 }
 
-void MprisFetcher2::onPlayerNameChange(const QString &AName) {
+void MprisFetcher2::updateStatus()
+{
+    QDBusMessage msg = FPlayerInterface->call("GetMetadata");
+    onPropertyChange(msg);
+}
+
+void MprisFetcher2::onPlayerNameChange(const QString &AName)
+{
     FPlayerName = AName;
 
-    if (FPlayerInterface && FPlayerInterface->isValid()) {
+    if (FPlayerInterface) {
         disconnectToBus();
         delete FPlayerInterface;
         FPlayerInterface = NULL;
@@ -123,10 +128,11 @@ void MprisFetcher2::onPlayerNameChange(const QString &AName) {
 
     FPlayerInterface = new QDBusInterface("org.mpris.MediaPlayer2." + FPlayerName, "/Player",
                                   "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
-    // getStatus
-    // if status != PSStoped { emit }
 
-    connectToBus();
+    if (FPlayerInterface->isValid()) {
+        updateStatus();
+        connectToBus();
+    }
 }
 
 void MprisFetcher2::onPropertyChange(QDBusMessage msg)
@@ -167,6 +173,10 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
             FUserTuneData = data;
             emit trackChanged(data);
         }
+#ifndef NO_QT_DEBUG
+    } else {
+        qWarning() << "invalid Metadata onPropertyChange(QDBusMessage)";
+#endif
     }
 
     v = map.value("PlaybackStatus");
@@ -186,6 +196,10 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
             FStatus = pStatus;
             emit statusChanged(FStatus);
         }
+#ifndef NO_QT_DEBUG
+    } else {
+        qWarning() << "invalid PlaybackStatus onPropertyChange(QDBusMessage)";
+#endif
     }
 }
 

@@ -51,15 +51,7 @@ MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QStri
         return;
     }
 
-    QDBusReply<QVariantMap> metadata = FPlayerInterface->call("GetMetadata");
-    if (metadata.isValid()) {
-        FTrackInfo = metadata.value();
-        onTrackChange(FTrackInfo);
-    }
-
-   QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
-    onPlayerStatusChange(status);
-
+    updateStatus();
     connectToBus();
 }
 
@@ -172,10 +164,29 @@ void MprisFetcher1::playerNext()
     Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
 }
 
-void MprisFetcher1::onPlayerNameChange(const QString &AName) {
+void MprisFetcher1::updateStatus()
+{
+    QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
+    onPlayerStatusChange(status);
+
+    if (FStatus.Play != PSStopped) {
+        QDBusReply<QVariantMap> metadata = FPlayerInterface->call("GetMetadata");
+        if (metadata.isValid()) {
+            FTrackInfo = metadata.value();
+            onTrackChange(FTrackInfo);
+#ifndef NO_QT_DEBUG
+        } else {
+            qWarning() << "Invalid metadata updateStatus()";
+#endif
+        }
+    }
+}
+
+void MprisFetcher1::onPlayerNameChange(const QString &AName)
+{
     FPlayerName = AName;
 
-    if (FPlayerInterface && FPlayerInterface->isValid()) {
+    if (FPlayerInterface) {
         disconnectToBus();
         delete FPlayerInterface;
         FPlayerInterface = NULL;
@@ -183,11 +194,15 @@ void MprisFetcher1::onPlayerNameChange(const QString &AName) {
 
     FPlayerInterface = new QDBusInterface("org.mpris." + FPlayerName, "/Player",
                                   "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
-    connectToBus();
+    if (FPlayerInterface->isValid()) {
+        updateStatus();
+        connectToBus();
+    }
 }
 
 void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
 {
+    qDebug() << "Track changed";
     UserTuneData data;
     if (trackInfo.contains("artist")) {
         data.artist =  trackInfo["artist"].toString();
@@ -219,9 +234,11 @@ void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
 
 void MprisFetcher1::onPlayerStatusChange(PlayerStatus status)
 {
-    FStatus = status;
+    if (FStatus != status) {
+        FStatus = status;
 
-    emit statusChanged(FStatus);
+        emit statusChanged(FStatus);
+    }
 }
 
 void MprisFetcher1::onPlayersExistenceChanged(QString name, QString /*empty*/, QString newOwner)
@@ -234,6 +251,7 @@ void MprisFetcher1::onPlayersExistenceChanged(QString name, QString /*empty*/, Q
     bool player_closed = newOwner.isEmpty();
     if (!player_closed) {
         if (FPlayerName == newPlayer) {
+            qDebug() << newPlayer;
             onPlayerNameChange(newPlayer);
         }
     } else {

@@ -32,6 +32,7 @@ private slots:
 private:
     void connectToBus();
     void disconnectToBus();
+    void updateStatus();
 
 private:
     UserTuneData FUserTuneData;

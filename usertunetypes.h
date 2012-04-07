@@ -4,16 +4,9 @@
 #include <QString>
 #include <QUrl>
 
-struct PlayerStatus
-{
-    bool operator ==(const PlayerStatus &APlayerStatus) const;
-    bool operator !=(const PlayerStatus &APlayerStatus) const;
-    PlayerStatus &operator =(const PlayerStatus &APlayerStatus);
-
-    int Play;
-    int PlayRandom;
-    int Repeat;
-    int RepeatPlaylist;
+enum MprisVer {
+    mprisV1 = 0,
+    mprisV2
 };
 
 enum PlayingStatus
@@ -23,9 +16,17 @@ enum PlayingStatus
     PSStopped
 };
 
-enum MprisVer {
-    mprisV1 = 0,
-    mprisV2
+struct PlayerStatus
+{
+    PlayerStatus() : Play(PSStopped) {}
+    bool operator ==(const PlayerStatus &APlayerStatus) const;
+    bool operator !=(const PlayerStatus &APlayerStatus) const;
+    PlayerStatus &operator =(const PlayerStatus &APlayerStatus);
+
+    int Play;
+    int PlayRandom;
+    int Repeat;
+    int RepeatPlaylist;
 };
 
 struct UserTuneData

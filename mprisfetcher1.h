@@ -33,6 +33,7 @@ private slots:
 private:
     void connectToBus();
     void disconnectToBus();
+    void updateStatus();
 };
 
 #endif // MPRISFETCHER1_H
