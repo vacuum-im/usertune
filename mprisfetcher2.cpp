@@ -74,7 +74,7 @@ void MprisFetcher2::playerPlay()
     }
 
     FPlayerInterface->call("PlayPause");
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher2::playerStop()
@@ -85,7 +85,7 @@ void MprisFetcher2::playerStop()
     }
 
     FPlayerInterface->call("Stop");
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher2::playerPrev()
@@ -96,7 +96,7 @@ void MprisFetcher2::playerPrev()
     }
 
     FPlayerInterface->call("Previous");
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher2::playerNext()
@@ -107,7 +107,7 @@ void MprisFetcher2::playerNext()
     }
 
     FPlayerInterface->call(QString("Next"));
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher2::updateStatus()

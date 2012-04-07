@@ -80,7 +80,7 @@ void MprisFetcher1::connectToBus()
                 this,
                 SLOT(onPlayerStatusChange(PlayerStatus)));
 
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher1::disconnectToBus()
@@ -99,7 +99,7 @@ void MprisFetcher1::disconnectToBus()
                                         "a{sv}",
                                         this,
                                         SLOT(onTrackChange(QVariantMap)));
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 QStringList MprisFetcher1::getPlayersList()
@@ -128,7 +128,7 @@ void MprisFetcher1::playerPlay()
     } else {
         FPlayerInterface->call("Pause");
     }
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher1::playerStop()
@@ -139,7 +139,7 @@ void MprisFetcher1::playerStop()
     }
 
     FPlayerInterface->call("Stop");
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher1::playerPrev()
@@ -150,7 +150,7 @@ void MprisFetcher1::playerPrev()
     }
 
     FPlayerInterface->call("Prev");
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher1::playerNext()
@@ -161,7 +161,7 @@ void MprisFetcher1::playerNext()
     }
 
     FPlayerInterface->call(QString("Next"));
-    Q_ASSERT(FPlayerInterface->lastError().type() != QDBusError::NoError);
+    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher1::updateStatus()
