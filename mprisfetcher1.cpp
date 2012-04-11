@@ -202,7 +202,6 @@ void MprisFetcher1::onPlayerNameChange(const QString &AName)
 
 void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
 {
-    qDebug() << "Track changed";
     UserTuneData data;
     if (trackInfo.contains("artist")) {
         data.artist =  trackInfo["artist"].toString();
@@ -211,7 +210,7 @@ void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
         data.length = trackInfo["time"].toInt();
     }
     if (trackInfo.contains("rating")) {
-        data.rating = trackInfo["artist"].toInt();
+        data.rating = trackInfo["rating"].toInt();
     }
     if (trackInfo.contains("album")) {
         data.source =  trackInfo["album"].toString();
