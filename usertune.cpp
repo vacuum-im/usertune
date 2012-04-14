@@ -2,8 +2,6 @@
 #  include <QDebug>
 #endif
 
-#include "definitions.h"
-
 #include <definitions/notificationtypes.h>
 #include <definitions/notificationdataroles.h>
 #include <definitions/notificationtypeorders.h>
@@ -18,6 +16,9 @@
 #include "usertune.h"
 #include "mprisfetcher1.h"
 #include "mprisfetcher2.h"
+#include "usertuneoptions.h"
+
+#include "definitions.h"
 
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
@@ -183,9 +184,7 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
     QMultiMap<int, IOptionsWidget *> widgets;
     if (FOptionsManager && ANodeId==OPN_USERTUNE)
     {
-        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
-        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_TAG_FORMAT),tr("Tag format:"),AParent));
-        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_PLAYER_NAME),tr("Player name:"),AParent));
+        widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
     }
     return widgets;
 }
@@ -263,7 +262,7 @@ void UserTuneHandler::updateFetchers()
         FMprisFetcher = NULL;
     }
 
-    switch (Options::node(OPV_UT_PLAYER_VER).value().toInt()) {
+    switch (Options::node(OPV_UT_PLAYER_VER).value().toUInt()) {
 #ifdef Q_WS_X11
     case mprisV1:
         FMprisFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
@@ -275,6 +274,7 @@ void UserTuneHandler::updateFetchers()
     // for Windows players...
 #endif
     case mprisNone:
+        // disable send data, only recive
     default:
         break;
     }

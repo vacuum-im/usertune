@@ -12,7 +12,6 @@ public:
     QVariantMap getMetadata();
     PlayerStatus getPlayerStatus();
     QString getPlayerName() const;
-    virtual QStringList getPlayersList();
 
 signals:
     void statusChanged(PlayerStatus);

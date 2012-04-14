@@ -102,20 +102,6 @@ void MprisFetcher1::disconnectToBus()
     Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
-QStringList MprisFetcher1::getPlayersList()
-{
-    QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.");
-    QStringList ret_list;
-
-    foreach (QString service, services) {
-        if (service.startsWith("org.mpris.") && !service.startsWith("org.mpris.MediaPlayer2.")) {
-            ret_list << service.replace("org.mpris.","");
-        }
-    }
-
-    return ret_list;
-}
-
 void MprisFetcher1::playerPlay()
 {
     if (!FPlayerInterface || !FPlayerInterface->isValid())

@@ -2,6 +2,26 @@
 
 #include "imprisfetcher.h"
 
+t_playersList getPlayersList()
+{
+    QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.");
+    t_playersList ret_list;
+
+    QRegExp rx("org.mpris(.MediaPlayer2)?.",Qt::CaseSensitive);
+
+    foreach (QString service, services) {
+        if (service.startsWith("org.mpris.MediaPlayer2.")) {
+            ret_list.insert(service.replace(rx,"").append("/MPRISv2"), mprisV2);
+        }
+        else
+        {
+            ret_list.insert(service.replace(rx,"").append("/MPRISv1"),mprisV1);
+        }
+    }
+
+    return ret_list;
+}
+
 IMprisFetcher::IMprisFetcher(QObject *parent) :
     QObject(parent)
 {

@@ -57,15 +57,6 @@ void MprisFetcher2::disconnectToBus()
                                              SLOT(onTrackChange(QVariantMap)));
 }
 
-QStringList MprisFetcher2::getPlayersList()
-{
-    QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.MediaPlayer2.");
-    services.replaceInStrings("org.mpris.MediaPlayer2.","");
-    services.removeDuplicates();
-
-    return services;
-}
-
 void MprisFetcher2::playerPlay()
 {
     if (!FPlayerInterface || !FPlayerInterface->isValid())

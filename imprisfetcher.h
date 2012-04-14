@@ -6,13 +6,18 @@
 
 #include "usertunetypes.h"
 
+#define MPRIS_PATTERN "/MPRISv\\d+"
+
+typedef QMap<QString,MprisVer> t_playersList;
+
+t_playersList getPlayersList();
+
 class IMprisFetcher : public QObject
 {
     Q_OBJECT
 public:
     explicit IMprisFetcher(QObject *parent);
     virtual ~IMprisFetcher();
-    virtual QStringList getPlayersList() = 0;
     QVariantMap getMetadata();
     PlayerStatus getPlayerStatus();
     QString getPlayerName() const { return FPlayerName; }
