@@ -1,7 +1,7 @@
 #include <utils/options.h>
 
+#include <ui_usertuneoptions.h>
 #include "usertuneoptions.h"
-#include "ui_usertuneoptions.h"
 
 #include "definitions.h"
 

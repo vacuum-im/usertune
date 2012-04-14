@@ -37,14 +37,19 @@ elseif (UNIX)
 	include_directories("${CMAKE_INSTALL_PREFIX}/include/${INSTALL_APP_DIR}")
 endif (WIN32)
 
-set(SOURCES usertune.cpp imprisfetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp usertunetypes.cpp)
-set(HEADERS usertune.h imprisfetcher.h mprisfetcher1.h mprisfetcher2.h usertunetypes.h)
+set(SOURCES usertune.cpp imprisfetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp usertuneoptions.cpp usertunetypes.cpp)
+set(MY_MOC_HEADERS usertune.h imprisfetcher.h mprisfetcher1.h mprisfetcher2.h usertuneoptions.h)
+set(HEADERS ${MY_MOC_HEADERS} usertunetypes.h)
+set(UIS usertuneoptions.ui)
 
-qt4_wrap_cpp(MOC_SOURCES ${HEADERS})
+qt4_wrap_cpp(MOC_SOURCES ${MY_MOC_HEADERS})
+qt4_wrap_ui(UI_HEADERS ${UIS})
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_translations(TRANSLATIONS ${PLUGIN_NAME} ${HEADERS} ${SOURCES})
 
-add_library(${PLUGIN_NAME} SHARED ${SOURCES} ${MOC_SOURCES} ${TRANSLATIONS} )
+add_library(${PLUGIN_NAME} SHARED ${SOURCES} ${MOC_SOURCES} ${TRANSLATIONS} ${UI_HEADERS})
 
 find_library(TARGET_UTILS vacuumutils ${CMAKE_INSTALL_PREFIX})
 target_link_libraries(${PLUGIN_NAME} ${TARGET_UTILS} ${QT_LIBRARIES})
