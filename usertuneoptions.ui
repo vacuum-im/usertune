@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>User Tune</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" colspan="2">
@@ -48,7 +48,7 @@
     </spacer>
    </item>
    <item row="1" column="2" colspan="2">
-    <widget class="QLineEdit" name="lineEdit"/>
+    <widget class="QLineEdit" name="le_format"/>
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="l_playerName">
@@ -103,7 +103,7 @@
   <zorder>horizontalSpacer</zorder>
   <zorder>chb_showIcon</zorder>
   <zorder>l_tags</zorder>
-  <zorder>lineEdit</zorder>
+  <zorder>le_format</zorder>
   <zorder>horizontalSpacer_2</zorder>
   <zorder>verticalSpacer</zorder>
  </widget>

@@ -12,6 +12,13 @@ UserTuneOptions::UserTuneOptions(QWidget *AParent) :
     ui->setupUi(this);
 
     onRefreshPlayer();
+
+    connect(ui->cb_playerName,SIGNAL(currentIndexChanged(int)),SIGNAL(modified()));
+    connect(ui->chb_showIcon,SIGNAL(stateChanged(int)),SIGNAL(modified()));
+    connect(ui->le_format,SIGNAL(textChanged(const QString &)),SIGNAL(modified()));
+    connect(ui->btn_refreshPlayers, SIGNAL(clicked()), SLOT(onRefreshPlayer()));
+
+    reset();
 }
 
 UserTuneOptions::~UserTuneOptions()
@@ -33,7 +40,7 @@ void UserTuneOptions::onRefreshPlayer()
 void UserTuneOptions::apply()
 {
     Options::node(OPV_UT_SHOW_ROSTER_LABEL).setValue(ui->chb_showIcon->isChecked());
-    Options::node(OPV_UT_TAG_FORMAT).setValue(ui->l_tags->text());
+    Options::node(OPV_UT_TAG_FORMAT).setValue(ui->le_format->text());
 
     int index = ui->cb_playerName->currentIndex();
 
@@ -59,7 +66,7 @@ void UserTuneOptions::apply()
 void UserTuneOptions::reset()
 {
     ui->chb_showIcon->setChecked(Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool());
-    ui->l_tags->setText(Options::node(OPV_UT_TAG_FORMAT).value().toString());
+    ui->le_format->setText(Options::node(OPV_UT_TAG_FORMAT).value().toString());
 
     int index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
     ui->cb_playerName->setCurrentIndex(index);
