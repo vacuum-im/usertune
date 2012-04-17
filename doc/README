@@ -1,8 +1,9 @@
 Popup notofications over DBus Vacuum-IM extension plugin
 --------------------------------------------------------
 
-Плагин использует org.freedesktop.Notifications для показа уведомлений
-Зависит от QDBus
+Плагин реализует XEP-0118: прием и отпавку сообщений
+подписчикам информации о проигрываемой музыке. Мехнаиз
+реализован поверх XEP-0163.
 
 Web Site:
   http://http://code.google.com/p/vacuum-plugins/
