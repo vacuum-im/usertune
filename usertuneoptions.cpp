@@ -28,13 +28,22 @@ UserTuneOptions::~UserTuneOptions()
 
 void UserTuneOptions::onRefreshPlayer()
 {
-    t_playersList players = getPlayersList();
+    int index = ui->cb_mpris_version->currentIndex();
+    int version = ui->cb_mpris_version->itemData(index).toInt();
+    QStringList players = getPlayersList(version);
+
     ui->cb_playerName->clear();
-    ui->cb_playerName->addItem(tr("Not selected"),mprisNone);
-    for (t_playersList::ConstIterator it = players.constBegin(); it != players.constEnd(); ++it)
-    {
-        ui->cb_playerName->addItem(it.key(),it.value());
+    ui->cb_playerName->addItems(players);
+
+    if (index == -1) {
+        index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
     }
+    ui->cb_playerName->setCurrentIndex(index);
+
+    ui->cb_mpris_version->addItem(tr("Not selected"), mprisNone);
+    ui->cb_mpris_version->addItem("MPRISv1", mprisV1);
+    ui->cb_mpris_version->addItem("MPRISv2", mprisV2);
+
 }
 
 void UserTuneOptions::apply()
@@ -42,17 +51,15 @@ void UserTuneOptions::apply()
     Options::node(OPV_UT_SHOW_ROSTER_LABEL).setValue(ui->chb_showIcon->isChecked());
     Options::node(OPV_UT_TAG_FORMAT).setValue(ui->le_format->text());
 
-    int index = ui->cb_playerName->currentIndex();
+    int index = ui->cb_mpris_version->currentIndex();
+    int version = ui->cb_mpris_version->itemData(index).toInt();
 
-    int version = ui->cb_playerName->itemData(index).toInt();
-    QString name = ui->cb_playerName->itemText(index);
+    QString name = ui->cb_playerName->currentText();
 
     if (version != mprisNone)
     {
-        QRegExp rx(MPRIS_PATTERN);
-
         Options::node(OPV_UT_PLAYER_VER).setValue(version);
-        Options::node(OPV_UT_PLAYER_NAME).setValue(name.replace(rx,""));
+        Options::node(OPV_UT_PLAYER_NAME).setValue(name);
     }
     else
     {
@@ -69,7 +76,7 @@ void UserTuneOptions::reset()
     ui->le_format->setText(Options::node(OPV_UT_TAG_FORMAT).value().toString());
 
     int index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
-    ui->cb_playerName->setCurrentIndex(index);
+    ui->cb_playerName->setCurrentIndex(index != -1 ? index : 0);
 
     emit childReset();
 }
