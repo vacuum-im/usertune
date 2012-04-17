@@ -9,7 +9,7 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QStri
 {
     FPlayerInterface = NULL;
 
-    if (APlayerName.isNull() || APlayerName.length() == 0) {
+    if (APlayerName.isNull() || APlayerName.isEmpty()) {
 #ifndef QT_NO_DEBUG
         qDebug() << "Player name not set.";
 #endif
@@ -109,6 +109,10 @@ void MprisFetcher2::updateStatus()
 
 void MprisFetcher2::onPlayerNameChange(const QString &AName)
 {
+    if (AName.isNull() || AName.isEmpty()) {
+        return;
+    }
+
     FPlayerName = AName;
 
     if (FPlayerInterface) {
