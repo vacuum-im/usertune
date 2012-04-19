@@ -52,27 +52,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertuneoptions.ui" line="26"/>
+        <location filename="../../usertuneoptions.ui" line="49"/>
         <source>Show music icon in roster</source>
         <translation>Показывать значок ноты в ростере</translation>
     </message>
     <message>
-        <location filename="../../usertuneoptions.ui" line="33"/>
+        <location filename="../../usertuneoptions.ui" line="20"/>
         <source>Tag format:</source>
         <translation>Расстановка тегов:</translation>
     </message>
     <message>
-        <location filename="../../usertuneoptions.ui" line="59"/>
+        <location filename="../../usertuneoptions.ui" line="30"/>
         <source>Player name:</source>
         <translation>Плеер:</translation>
     </message>
     <message>
-        <location filename="../../usertuneoptions.ui" line="82"/>
+        <location filename="../../usertuneoptions.ui" line="69"/>
         <source>Refresh</source>
         <translation>Обновить</translation>
     </message>
     <message>
-        <location filename="../../usertuneoptions.cpp" line="33"/>
+        <location filename="../../usertuneoptions.ui" line="76"/>
+        <source>MPRIS Version:</source>
+        <translation>Версия протокола MPRIS:</translation>
+    </message>
+    <message>
+        <location filename="../../usertuneoptions.cpp" line="14"/>
         <source>Not selected</source>
         <translation>Не выбран</translation>
     </message>

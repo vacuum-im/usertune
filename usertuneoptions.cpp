@@ -11,7 +11,11 @@ UserTuneOptions::UserTuneOptions(QWidget *AParent) :
 {
     ui->setupUi(this);
 
-    onRefreshPlayer();
+    ui->cb_mpris_version->addItem(tr("Not selected"), mprisNone);
+    ui->cb_mpris_version->addItem("MPRISv1", mprisV1);
+    ui->cb_mpris_version->addItem("MPRISv2", mprisV2);
+
+    connect(ui->cb_mpris_version,SIGNAL(currentIndexChanged(int)),this,SLOT(onVersionChange(int)));
 
     connect(ui->cb_playerName,SIGNAL(currentIndexChanged(int)),SIGNAL(modified()));
     connect(ui->chb_showIcon,SIGNAL(stateChanged(int)),SIGNAL(modified()));
@@ -35,15 +39,21 @@ void UserTuneOptions::onRefreshPlayer()
     ui->cb_playerName->clear();
     ui->cb_playerName->addItems(players);
 
-    if (index == -1) {
-        index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
-    }
+    index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
     ui->cb_playerName->setCurrentIndex(index);
+}
 
-    ui->cb_mpris_version->addItem(tr("Not selected"), mprisNone);
-    ui->cb_mpris_version->addItem("MPRISv1", mprisV1);
-    ui->cb_mpris_version->addItem("MPRISv2", mprisV2);
+void UserTuneOptions::onVersionChange(int index)
+{
+    bool enabled = ui->cb_mpris_version->itemData(index).toInt() != mprisNone;
+    ui->le_format->setEnabled(enabled);
+    ui->cb_playerName->setEnabled(enabled);
+    ui->btn_refreshPlayers->setEnabled(enabled);
 
+    if (enabled)
+    {
+        onRefreshPlayer();
+    }
 }
 
 void UserTuneOptions::apply()
@@ -77,6 +87,9 @@ void UserTuneOptions::reset()
 
     int index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
     ui->cb_playerName->setCurrentIndex(index != -1 ? index : 0);
+
+    index = ui->cb_mpris_version->findData(Options::node(OPV_UT_PLAYER_VER).value().toInt());
+    ui->cb_mpris_version->setCurrentIndex(index);
 
     emit childReset();
 }

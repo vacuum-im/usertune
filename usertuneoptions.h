@@ -33,6 +33,7 @@ public slots:
 
 private slots:
     void onRefreshPlayer();
+    void onVersionChange(int);
 
 private:
     Ui::UserTuneOptions *ui;

@@ -5,21 +5,21 @@ QStringList getPlayersList(const int &ver)
 {
     QStringList ret_list;
     QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.");
-    QStringList::const_iterator it = services.constBegin();
+
     switch (ver)
     {
     case mprisV1:
-        for ( ; it != services.constEnd(); ++it)
+        foreach (QString service, services)
         {
-            if (!it->startsWith("org.mpris.MediaPlayer2."))
-            ret_list << *it;
+            if (!service.startsWith("org.mpris.MediaPlayer2."))
+                ret_list << service.replace("org.mpris.","");
         }
         break;
      case mprisV2:
-        for ( ; it != services.constEnd(); ++it)
+        foreach (QString service, services)
         {
-            if (it->startsWith("org.mpris.MediaPlayer2."))
-            ret_list << *it;
+            if (service.startsWith("org.mpris.MediaPlayer2."))
+                ret_list << service.replace("org.mpris.MediaPlayer2.","");
         }
         break;
     default:
