@@ -39,7 +39,7 @@
         <translation type="unfinished">Оповещение User Tune</translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="469"/>
+        <location filename="../../usertune.cpp" line="473"/>
         <source>Listen:</source>
         <translation>Слушает:</translation>
     </message>
@@ -75,6 +75,11 @@
         <location filename="../../usertuneoptions.ui" line="76"/>
         <source>MPRIS Version:</source>
         <translation>Версия протокола MPRIS:</translation>
+    </message>
+    <message>
+        <location filename="../../usertuneoptions.ui" line="89"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - исполнитель&lt;br /&gt;%L - длинна&lt;br /&gt;%R - рейтинг&lt;br /&gt;%S - альбом&lt;br /&gt;%T - название&lt;br /&gt;%N - номер песни&lt;br /&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../usertuneoptions.cpp" line="14"/>

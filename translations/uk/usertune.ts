@@ -39,7 +39,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="469"/>
+        <location filename="../../usertune.cpp" line="473"/>
         <source>Listen:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -74,6 +74,11 @@
     <message>
         <location filename="../../usertuneoptions.ui" line="76"/>
         <source>MPRIS Version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../usertuneoptions.ui" line="89"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

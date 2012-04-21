@@ -454,8 +454,12 @@ QString UserTuneHandler::returnTagFormat(QString contactJid)
 {
     FTag = FFormatTag;
     FTag.replace(QString("%A"), Qt::escape(FContactTune.value(contactJid).artist));
-    FTag.replace(QString("%T"), Qt::escape(FContactTune.value(contactJid).title));
+    FTag.replace(QString("%L"), Qt::escape(FContactTune.value(contactJid).length));
+    FTag.replace(QString("%R"), Qt::escape(FContactTune.value(contactJid).rating));
     FTag.replace(QString("%S"), Qt::escape(FContactTune.value(contactJid).source));
+    FTag.replace(QString("%T"), Qt::escape(FContactTune.value(contactJid).title));
+    FTag.replace(QString("%N"), Qt::escape(FContactTune.value(contactJid).track));
+    FTag.replace(QString("%U"), Qt::escape(FContactTune.value(contactJid).uri));
     return FTag;
 }
 
