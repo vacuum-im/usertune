@@ -4,42 +4,42 @@
 <context>
     <name>UserTuneHandler</name>
     <message>
-        <location filename="../../usertune.cpp" line="43"/>
+        <location filename="../../usertune.cpp" line="51"/>
         <source>User Tune Handler</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="44"/>
+        <location filename="../../usertune.cpp" line="52"/>
         <source>Allows hadle user tunes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="125"/>
+        <location filename="../../usertune.cpp" line="133"/>
         <source>User tune</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="130"/>
+        <location filename="../../usertune.cpp" line="138"/>
         <source>User tune notification</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="139"/>
+        <location filename="../../usertune.cpp" line="147"/>
         <source>When reminding of contact playing music</source>
         <translation type="unfinished">При получении извещения от контакта о проигрываемой музыке</translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="174"/>
+        <location filename="../../usertune.cpp" line="182"/>
         <source>User Tune</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="230"/>
+        <location filename="../../usertune.cpp" line="238"/>
         <source>User Tune Notification</source>
         <translation type="unfinished">Оповещение User Tune</translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="473"/>
+        <location filename="../../usertune.cpp" line="501"/>
         <source>Listen:</source>
         <translation>Слушает:</translation>
     </message>
@@ -52,14 +52,14 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../../usertuneoptions.ui" line="20"/>
+        <source>Show format:</source>
+        <translation>Формат отображения тегов:</translation>
+    </message>
+    <message>
         <location filename="../../usertuneoptions.ui" line="49"/>
         <source>Show music icon in roster</source>
         <translation>Показывать значок ноты в ростере</translation>
-    </message>
-    <message>
-        <location filename="../../usertuneoptions.ui" line="20"/>
-        <source>Tag format:</source>
-        <translation>Расстановка тегов:</translation>
     </message>
     <message>
         <location filename="../../usertuneoptions.ui" line="30"/>
