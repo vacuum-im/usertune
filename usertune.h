@@ -93,8 +93,13 @@ protected slots:
 protected:
     void setContactTune(const QString &AContactJid, const UserTuneData &ASong);
     void setContactLabel();
-    inline QString secToTime(int sec)
+    inline QString secToTime(unsigned short sec)
     {
+        if (sec == 0)
+        {
+            return QString();
+        }
+
         int min = 0;
 
         while (sec > 60) {
@@ -128,6 +133,7 @@ private:
 
 private:
     void updateFetchers();
+    void deleteRosterIcon();
 };
 
 #endif // USERTUNE_H

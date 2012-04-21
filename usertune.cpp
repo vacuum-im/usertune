@@ -20,6 +20,14 @@
 
 #include "definitions.h"
 
+#define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
+{ \
+    QDomElement tag = (document).createElement(child_name); \
+    QDomText text = (document).createTextNode(child_data); \
+    tag.appendChild(text); \
+    (root_element).appendChild(tag); \
+}
+
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
 
@@ -313,35 +321,58 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
 
                     if (!tuneElem.isNull())
                     {
-                        QDomElement artistElem = tuneElem.firstChildElement("artist");
-
-                        if (!artistElem.isNull())
+                        QDomElement elem;
+                        elem = tuneElem.firstChildElement("artist");
+                        if (!elem.isNull())
                         {
-                            userSong.artist = artistElem.text();
+                            userSong.artist = elem.text();
                         }
 
-                        QDomElement titleElem = tuneElem.firstChildElement("title");
-
-                        if (!titleElem.isNull())
+                        elem = tuneElem.firstChildElement("length");
+                        if (!elem.isNull())
                         {
-                            userSong.title = titleElem.text();
-                            //                            song.append(QString(" - %1").arg(titleElem.text()));
+                            userSong.length = elem.text().toUInt();
                         }
 
-                        QDomElement sourceElem = tuneElem.firstChildElement("source");
-
-                        if (!sourceElem.isNull())
+                        elem = tuneElem.firstChildElement("rating");
+                        if (!elem.isNull())
                         {
-                            userSong.source = sourceElem.text();
-                            //                            song.append(QString(" <%1>").arg(sourceElem.text()));
+                            userSong.rating = elem.text().toUInt();
                         }
 
-                        QDomElement trackElem = tuneElem.firstChildElement("track");
-
-                        if (!trackElem.isNull())
+                        elem = tuneElem.firstChildElement("source");
+                        if (!elem.isNull())
                         {
-                            userSong.track = trackElem.text();
+                            userSong.source = elem.text();
                         }
+
+                        elem = tuneElem.firstChildElement("title");
+                        if (!elem.isNull())
+                        {
+                            userSong.title = elem.text();
+                        }
+
+                        elem = tuneElem.firstChildElement("track");
+                        if (!elem.isNull())
+                        {
+                            userSong.track = elem.text();
+                        }
+
+                        elem = tuneElem.firstChildElement("uri");
+                        if (!elem.isNull())
+                        {
+                            userSong.uri = elem.text();
+                        }
+                    }
+                    else // !itemElem.isNull()
+                    {
+//                        if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+//                        {
+//                            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
+//                            {
+//                                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+//                            }
+//                        }
                     }
                 }
             }
@@ -362,29 +393,19 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
     QDomElement tune = doc.createElement("tune");
     root.appendChild(tune);
 
-    QDomElement tag = doc.createElement("artist");
-    tune.appendChild(tag);
-
-    QDomText t1 = doc.createTextNode(data.artist);
-    tag.appendChild(t1);
-
-    QDomElement title = doc.createElement("title");
-    tune.appendChild(title);
-
-    QDomText t2 = doc.createTextNode(data.title);
-    title.appendChild(t2);
-
-    QDomElement album = doc.createElement("source");
-    tune.appendChild(album);
-
-    QDomText t3 = doc.createTextNode(data.source);
-    album.appendChild(t3);
-
-    Jid streamJid;
+    ADD_CHILD_ELEMENT (doc, tune, "artist", data.artist)
+    ADD_CHILD_ELEMENT (doc, tune, "length", QString::number(data.length))
+    ADD_CHILD_ELEMENT (doc, tune, "rating", QString::number(data.rating))
+    ADD_CHILD_ELEMENT (doc, tune, "source", data.source)
+    ADD_CHILD_ELEMENT (doc, tune, "title", data.title)
+    ADD_CHILD_ELEMENT (doc, tune, "track", data.track)
+    ADD_CHILD_ELEMENT (doc, tune, "uri", data.uri.toString())
 
 #ifndef QT_NO_DEBUG
     qDebug() << data.artist + data.source + data.title;
+    qDebug() << doc.toString();
 #endif
+    Jid streamJid;
 
     for (int i = 0; i < FXmppStreams->xmppStreams().size(); i++)
     {
@@ -462,7 +483,7 @@ QString UserTuneHandler::returnTagFormat(QString contactJid)
     FTag = FFormatTag;
     FTag.replace(QString("%A"), Qt::escape(FContactTune.value(contactJid).artist));
     FTag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(contactJid).length)));
-    FTag.replace(QString("%R"), Qt::escape(QString(FContactTune.value(contactJid).rating)));
+    FTag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(contactJid).rating)));
     FTag.replace(QString("%S"), Qt::escape(FContactTune.value(contactJid).source));
     FTag.replace(QString("%T"), Qt::escape(FContactTune.value(contactJid).title));
     FTag.replace(QString("%N"), Qt::escape(FContactTune.value(contactJid).track));

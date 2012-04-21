@@ -146,10 +146,10 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
             data.artist =  FTrackInfo["xesam:artist"].toString();
         }
         if (FTrackInfo.contains("mpris:length")) {
-            data.length = FTrackInfo["mpris:length"].toLongLong() / 1000000;
+            data.length = FTrackInfo["mpris:length"].toULongLong() / 1000000;
         }
         if (FTrackInfo.contains("xesam:userRating")) {
-            data.rating = FTrackInfo["xesam:userRating"].toInt();
+            data.rating = FTrackInfo["xesam:userRating"].toUInt();
         }
         if (FTrackInfo.contains("xesam:album")) {
             data.source =  FTrackInfo["xesam:album"].toString();

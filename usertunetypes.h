@@ -41,8 +41,8 @@ struct UserTuneData
     QString source;
     QString title;
     QString track;
-    int length;
-    int rating;
+    unsigned int length;
+    unsigned int rating;
     QUrl uri;
 };
 

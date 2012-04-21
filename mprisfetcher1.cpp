@@ -197,10 +197,10 @@ void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
         data.artist =  trackInfo["artist"].toString();
     }
     if (trackInfo.contains("time")) {
-        data.length = trackInfo["time"].toInt();
+        data.length = trackInfo["time"].toUInt();
     }
     if (trackInfo.contains("rating")) {
-        data.rating = trackInfo["rating"].toInt();
+        data.rating = trackInfo["rating"].toUInt();
     }
     if (trackInfo.contains("album")) {
         data.source =  trackInfo["album"].toString();
