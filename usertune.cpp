@@ -223,7 +223,7 @@ void UserTuneHandler::onShowNotification(const QString &AContactJid)
     {
         INotification notify;
         notify.kinds = FNotifications->enabledTypeNotificationKinds(NNT_USERTUNE);
-        if ((notify.kinds & (INotification::PopupWindow))>0)
+        if ((notify.kinds & INotification::PopupWindow) > 0)
         {
             notify.typeId = NNT_USERTUNE;
             notify.data.insert(NDR_ICON,IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC));
@@ -442,11 +442,18 @@ void UserTuneHandler::setContactLabel()
         findData.insert(RDR_TYPE,RIT_CONTACT);
         findData.insert(RDR_PREP_BARE_JID,AContactJid);
         foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
-
-            if (!FContactTune.value(AContactJid).isEmpty() && (AContactJid == index->data(RDR_PREP_BARE_JID).toString()) && Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+        {
+            if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool()
+                    && (AContactJid == index->data(RDR_PREP_BARE_JID).toString())
+                    && !FContactTune.value(AContactJid).isEmpty())
+            {
                 FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+            }
             else
+            {
                 FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+            }
+        }
     }
 }
 
@@ -454,12 +461,12 @@ QString UserTuneHandler::returnTagFormat(QString contactJid)
 {
     FTag = FFormatTag;
     FTag.replace(QString("%A"), Qt::escape(FContactTune.value(contactJid).artist));
-    FTag.replace(QString("%L"), Qt::escape(FContactTune.value(contactJid).length));
-    FTag.replace(QString("%R"), Qt::escape(FContactTune.value(contactJid).rating));
+    FTag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(contactJid).length)));
+    FTag.replace(QString("%R"), Qt::escape(QString(FContactTune.value(contactJid).rating)));
     FTag.replace(QString("%S"), Qt::escape(FContactTune.value(contactJid).source));
     FTag.replace(QString("%T"), Qt::escape(FContactTune.value(contactJid).title));
     FTag.replace(QString("%N"), Qt::escape(FContactTune.value(contactJid).track));
-    FTag.replace(QString("%U"), Qt::escape(FContactTune.value(contactJid).uri));
+    FTag.replace(QString("%U"), Qt::escape(FContactTune.value(contactJid).uri.toString()));
     return FTag;
 }
 
@@ -470,7 +477,7 @@ void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, 
         QString contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
         if (!FContactTune.value(contactJid).isEmpty())
         {
-            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(returnTagFormat(contactJid).replace("\n","<br>"));
+            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(returnTagFormat(contactJid).replace("\n","<br />"));
             AToolTips.insert(RTTO_USERTUNE,tip);
         }
     }

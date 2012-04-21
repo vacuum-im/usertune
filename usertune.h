@@ -93,6 +93,17 @@ protected slots:
 protected:
     void setContactTune(const QString &AContactJid, const UserTuneData &ASong);
     void setContactLabel();
+    inline QString secToTime(int sec)
+    {
+        int min = 0;
+
+        while (sec > 60) {
+            ++min;
+            sec -= 60;
+        }
+
+        return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
+    }
     QString returnTagFormat(QString);
 
 private:

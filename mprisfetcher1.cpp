@@ -215,7 +215,6 @@ void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
         data.uri = trackInfo["location"].toUrl();
     }
 
-    trackInfo["time"] = secToTime(trackInfo["time"].toInt());
     FTrackInfo = trackInfo;
 
     emit trackChanged(data);

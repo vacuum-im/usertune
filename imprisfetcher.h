@@ -33,19 +33,6 @@ protected slots:
     virtual void onPlayersExistenceChanged(QString, QString, QString) = 0;
 
 protected:
-    inline QString secToTime(int sec)
-    {
-        int min = 0;
-
-        while (sec > 60) {
-            ++min;
-            sec -= 60;
-        }
-
-        return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
-    }
-
-protected:
     QString FPlayerName;
     QDBusInterface *FPlayerInterface;
     PlayerStatus FStatus;
