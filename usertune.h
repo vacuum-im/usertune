@@ -53,7 +53,7 @@ class UserTuneHandler :
     Q_OBJECT
     Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 public:
-    UserTuneHandler();
+    explicit UserTuneHandler();
     ~UserTuneHandler();
     //IPlugin
     virtual QObject *instance()
@@ -85,14 +85,15 @@ protected slots:
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
     void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
-    void onShowNotification(const QString &AContactJid);
+    void onShowNotification(const Jid &AContactJid);
     void onNotificationActivated(int ANotifyId);
     void onNotificationRemoved(int ANotifyId);
     void onApplicationQuit();
 
 protected:
-    void setContactTune(const QString &AContactJid, const UserTuneData &ASong);
+    void setContactTune(const Jid &AContactJid, const UserTuneData &ASong);
     void setContactLabel();
+    QString getTagFormat(const Jid &AContactJid);
     inline QString secToTime(unsigned short sec)
     {
         if (sec == 0)
@@ -109,7 +110,6 @@ protected:
 
         return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
     }
-    QString returnTagFormat(QString);
 
 private:
     IPEPManager *FPEPManager;
@@ -128,8 +128,8 @@ private:
     QString FFormatTag;
     QString FTag;
 
-    QMap<QString, UserTuneData> FContactTune;
-    QMap<int,Jid> FNotifies;
+    QMap<Jid, UserTuneData> FContactTune;
+    QMap<int, Jid> FNotifies;
 
 private:
     void updateFetchers();

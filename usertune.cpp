@@ -1,6 +1,6 @@
-#ifndef QT_NO_DEBUG
+//#ifndef QT_NO_DEBUG
 #  include <QDebug>
-#endif
+//#endif
 
 #include <definitions/notificationtypes.h>
 #include <definitions/notificationdataroles.h>
@@ -225,9 +225,9 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
     }
 }
 
-void UserTuneHandler::onShowNotification(const QString &AContactJid)
+void UserTuneHandler::onShowNotification(const Jid &AContactJid)
 {
-    if (FNotifications && FNotifications->notifications().isEmpty() && !FContactTune.value(AContactJid).isEmpty())
+    if (FNotifications && FNotifications->notifications().isEmpty() && FContactTune.contains(AContactJid))
     {
         INotification notify;
         notify.kinds = FNotifications->enabledTypeNotificationKinds(NNT_USERTUNE);
@@ -236,10 +236,10 @@ void UserTuneHandler::onShowNotification(const QString &AContactJid)
             notify.typeId = NNT_USERTUNE;
             notify.data.insert(NDR_ICON,IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC));
             notify.data.insert(NDR_POPUP_CAPTION,tr("User Tune Notification"));
-            notify.data.insert(NDR_POPUP_TITLE,AContactJid);
+            notify.data.insert(NDR_POPUP_TITLE,AContactJid.pBare());
             notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(AContactJid));
 
-            notify.data.insert(NDR_POPUP_HTML,returnTagFormat(AContactJid));
+            notify.data.insert(NDR_POPUP_HTML,getTagFormat(AContactJid));
 
             FNotifies.insert(FNotifications->appendNotification(notify),AContactJid);
         }
@@ -297,7 +297,7 @@ void UserTuneHandler::updateFetchers()
 bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
 {
     Q_UNUSED(AStreamJid)
-    QString senderJid;
+    Jid senderJid;
     UserTuneData userSong;
 
     QDomElement replyElem = AStanza.document().firstChildElement("message");
@@ -364,8 +364,9 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
                             userSong.uri = elem.text();
                         }
                     }
-                    else // !itemElem.isNull()
+                    else // !tuneElem.isNull()
                     {
+                        qDebug() << "isNull";
 //                        if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
 //                        {
 //                            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
@@ -440,7 +441,7 @@ void UserTuneHandler::onStopPublishing()
     }
 }
 
-void UserTuneHandler::setContactTune(const QString &AContactJid, const UserTuneData &ASong)
+void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData &ASong)
 {
     UserTuneData data = FContactTune.value(AContactJid);
     if (data != ASong)
@@ -456,17 +457,17 @@ void UserTuneHandler::setContactTune(const QString &AContactJid, const UserTuneD
 
 void UserTuneHandler::setContactLabel()
 {
-    foreach (const QString &AContactJid, FContactTune.keys())
+    foreach (const Jid &AContactJid, FContactTune.keys())
     {
-
         QMultiMap<int, QVariant> findData;
         findData.insert(RDR_TYPE,RIT_CONTACT);
-        findData.insert(RDR_PREP_BARE_JID,AContactJid);
+        findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
+
         foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
         {
             if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool()
-                    && (AContactJid == index->data(RDR_PREP_BARE_JID).toString())
-                    && !FContactTune.value(AContactJid).isEmpty())
+                    && (AContactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
+                    && FContactTune.contains(AContactJid))
             {
                 FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
             }
@@ -478,16 +479,18 @@ void UserTuneHandler::setContactLabel()
     }
 }
 
-QString UserTuneHandler::returnTagFormat(QString contactJid)
+QString UserTuneHandler::getTagFormat(const Jid &AContactJid)
 {
     FTag = FFormatTag;
-    FTag.replace(QString("%A"), Qt::escape(FContactTune.value(contactJid).artist));
-    FTag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(contactJid).length)));
-    FTag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(contactJid).rating)));
-    FTag.replace(QString("%S"), Qt::escape(FContactTune.value(contactJid).source));
-    FTag.replace(QString("%T"), Qt::escape(FContactTune.value(contactJid).title));
-    FTag.replace(QString("%N"), Qt::escape(FContactTune.value(contactJid).track));
-    FTag.replace(QString("%U"), Qt::escape(FContactTune.value(contactJid).uri.toString()));
+
+    FTag.replace(QString("%A"), Qt::escape(FContactTune.value(AContactJid).artist));
+    FTag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(AContactJid).length)));
+    FTag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(AContactJid).rating)));
+    FTag.replace(QString("%S"), Qt::escape(FContactTune.value(AContactJid).source));
+    FTag.replace(QString("%T"), Qt::escape(FContactTune.value(AContactJid).title));
+    FTag.replace(QString("%N"), Qt::escape(FContactTune.value(AContactJid).track));
+    FTag.replace(QString("%U"), Qt::escape(FContactTune.value(AContactJid).uri.toString()));
+
     return FTag;
 }
 
@@ -495,10 +498,10 @@ void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, 
 {
     if (ALabelId==RLID_DISPLAY || ALabelId==FUserTuneLabelId)
     {
-        QString contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
-        if (!FContactTune.value(contactJid).isEmpty())
+        Jid contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
+        if (FContactTune.contains(contactJid))
         {
-            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(returnTagFormat(contactJid).replace("\n","<br />"));
+            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(getTagFormat(contactJid).replace("\n","<br />"));
             AToolTips.insert(RTTO_USERTUNE,tip);
         }
     }
