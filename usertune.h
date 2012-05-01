@@ -85,13 +85,13 @@ protected slots:
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
     void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
-    void onShowNotification(const Jid &AContactJid);
+    void onShowNotification(const Jid &AStreamJid, const Jid &AContactJid);
     void onNotificationActivated(int ANotifyId);
     void onNotificationRemoved(int ANotifyId);
     void onApplicationQuit();
 
 protected:
-    void setContactTune(const Jid &AContactJid, const UserTuneData &ASong);
+    void setContactTune(const Jid &AStreamJid, const Jid &AContactJid, const UserTuneData &ASong);
     void setContactLabel();
     QString getTagFormat(const Jid &AContactJid);
     inline QString secToTime(unsigned short sec)

@@ -225,7 +225,7 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
     }
 }
 
-void UserTuneHandler::onShowNotification(const Jid &AContactJid)
+void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &AContactJid)
 {
     if (FNotifications && FNotifications->notifications().isEmpty() && FContactTune.contains(AContactJid))
     {
@@ -236,7 +236,7 @@ void UserTuneHandler::onShowNotification(const Jid &AContactJid)
             notify.typeId = NNT_USERTUNE;
             notify.data.insert(NDR_ICON,IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC));
             notify.data.insert(NDR_POPUP_CAPTION,tr("User Tune Notification"));
-            notify.data.insert(NDR_POPUP_TITLE,AContactJid.pBare());
+            notify.data.insert(NDR_POPUP_TITLE,FNotifications->contactName(AStreamJid, AContactJid));
             notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(AContactJid));
 
             notify.data.insert(NDR_POPUP_HTML,getTagFormat(AContactJid));
@@ -380,7 +380,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
         }
     }
 
-    setContactTune(senderJid, userSong);
+    setContactTune(AStreamJid, senderJid, userSong);
 
     return true;
 }
@@ -441,7 +441,7 @@ void UserTuneHandler::onStopPublishing()
     }
 }
 
-void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData &ASong)
+void UserTuneHandler::setContactTune(const Jid &AStreamJid, const Jid &AContactJid, const UserTuneData &ASong)
 {
     UserTuneData data = FContactTune.value(AContactJid);
     if (data != ASong)
@@ -452,7 +452,7 @@ void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData 
             FContactTune.remove(AContactJid);
     }
     setContactLabel();
-    onShowNotification(AContactJid);
+    onShowNotification(AStreamJid, AContactJid);
 }
 
 void UserTuneHandler::setContactLabel()
@@ -465,6 +465,7 @@ void UserTuneHandler::setContactLabel()
 
         foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
         {
+         // TODO: сделать удаление при изменении параметра OPV_UT_SHOW_ROSTER_LABEL; проверку вынести за цикл
             if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool()
                     && (AContactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
                     && FContactTune.contains(AContactJid))
