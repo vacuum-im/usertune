@@ -144,22 +144,33 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
 
         if (FTrackInfo.contains("xesam:artist")) {
             data.artist =  FTrackInfo["xesam:artist"].toString();
+        } else if (FTrackInfo.contains("xesam:composer")) {
+            data.artist =  FTrackInfo["xesam:composer"].toString();
         }
+
         if (FTrackInfo.contains("mpris:length")) {
             data.length = FTrackInfo["mpris:length"].toULongLong() / 1000000;
         }
+
         if (FTrackInfo.contains("xesam:userRating")) {
-            data.rating = FTrackInfo["xesam:userRating"].toUInt();
+        // use rating from 1 to 10
+            data.rating = FTrackInfo["xesam:userRating"].toUInt() * 2;
+        } else if (FTrackInfo.contains("rating")) {
+            data.rating = FTrackInfo["rating"].toUInt() * 2;
         }
+
         if (FTrackInfo.contains("xesam:album")) {
             data.source =  FTrackInfo["xesam:album"].toString();
         }
+
         if (FTrackInfo.contains("xesam:title")) {
             data.title =  FTrackInfo["xesam:title"].toString();
         }
+
         if (FTrackInfo.contains("xesam:trackNumber")) {
             data.track = FTrackInfo["xesam:trackNumber"].toString();
         }
+
         if (FTrackInfo.contains("xesam:url")) {
             data.uri = FTrackInfo["xesam:url"].toUrl();
         }

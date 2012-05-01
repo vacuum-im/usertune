@@ -200,7 +200,8 @@ void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
         data.length = trackInfo["time"].toUInt();
     }
     if (trackInfo.contains("rating")) {
-        data.rating = trackInfo["rating"].toUInt();
+    // use rating from 1 to 10
+        data.rating = trackInfo["rating"].toUInt() * 2;
     }
     if (trackInfo.contains("album")) {
         data.source =  trackInfo["album"].toString();
