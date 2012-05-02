@@ -1,6 +1,6 @@
-//#ifndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
 #  include <QDebug>
-//#endif
+#endif
 
 #include <definitions/notificationtypes.h>
 #include <definitions/notificationdataroles.h>
@@ -315,7 +315,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
             {
                 QDomElement itemElem = itemsElem.firstChildElement("item");
 
-                if (!itemElem.isNull())
+                if (!itemElem.isNull() && !itemElem.firstChildElement().isNull())
                 {
                     QDomElement tuneElem = itemElem.firstChildElement("tune");
 
@@ -364,16 +364,19 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
                             userSong.uri = elem.text();
                         }
                     }
-                    else // !tuneElem.isNull()
+                    else // !tuneElem.isNull() && !itemElem.firstChildElement().isNull()
                     {
-                        qDebug() << "isNull";
-//                        if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
-//                        {
-//                            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
-//                            {
-//                                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
-//                            }
-//                        }
+                        if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+                        {
+                            QMultiMap<int, QVariant> findData;
+                            findData.insert(RDR_TYPE,RIT_CONTACT);
+                            findData.insert(RDR_PREP_BARE_JID,senderJid.pBare());
+
+                            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
+                            {
+                                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+                            }
+                        }
                     }
                 }
             }
@@ -403,7 +406,6 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
     ADD_CHILD_ELEMENT (doc, tune, "uri", data.uri.toString())
 
 #ifndef QT_NO_DEBUG
-    qDebug() << data.artist + data.source + data.title;
     qDebug() << doc.toString();
 #endif
     Jid streamJid;
@@ -440,6 +442,12 @@ void UserTuneHandler::onStopPublishing()
         FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
     }
 }
+
+// TODO: выводить значок рядом с замком
+//void UserTuneHandler::onSetMainLabel()
+//{
+//    FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, FRostersModel->streamRoot(AStreamJid));
+//}
 
 void UserTuneHandler::setContactTune(const Jid &AStreamJid, const Jid &AContactJid, const UserTuneData &ASong)
 {

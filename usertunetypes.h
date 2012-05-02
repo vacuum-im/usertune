@@ -32,6 +32,8 @@ struct PlayerStatus
 
 struct UserTuneData
 {
+    UserTuneData();
+    ~UserTuneData();
     bool isEmpty() const;
     bool operator ==(const UserTuneData &AUserTune) const;
     bool operator !=(const UserTuneData &AUserTune) const;
