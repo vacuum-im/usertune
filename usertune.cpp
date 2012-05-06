@@ -283,6 +283,7 @@ void UserTuneHandler::updateFetchers()
 #endif
     case mprisNone:
         // disable send data, only recive
+        break;
     default:
         break;
     }
@@ -490,7 +491,7 @@ void UserTuneHandler::setContactLabel()
 
 QString UserTuneHandler::getTagFormat(const Jid &AContactJid)
 {
-    FTag = FFormatTag;
+    FTag = Qt::escape(FFormatTag);
 
     FTag.replace(QString("%A"), Qt::escape(FContactTune.value(AContactJid).artist));
     FTag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(AContactJid).length)));
