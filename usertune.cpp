@@ -156,6 +156,8 @@ bool UserTuneHandler::initObjects()
         label.order = RLO_USERTUNE;
         label.value = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
         FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(label);
+
+        onSetMainLabel();
     }
 
     return true;
@@ -167,13 +169,10 @@ bool UserTuneHandler::initSettings()
     Options::setDefaultValue(OPV_UT_TAG_FORMAT,"%T - %A - %S");
 #ifdef Q_WS_X11
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,"amarok");
+    Options::setDefaultValue(OPV_UT_PLAYER_VER,mprisV1);
 #elif Q_WS_WIN
     // TODO: сделать для windows
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,"");
-#endif
-#ifdef Q_WS_X11
-    Options::setDefaultValue(OPV_UT_PLAYER_VER,mprisV1);
-#elif Q_WS_WIN
     Options::setDefaultValue(OPV_UT_PLAYER_VER,"");
 #endif
 
@@ -209,7 +208,14 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
     if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
     {
-        setContactLabel();
+        if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+        {
+            setContactLabel();
+        }
+        else
+        {
+            unsetContactLabel();
+        }
     }
     else if (ANode.path() == OPV_UT_TAG_FORMAT)
     {
@@ -293,6 +299,10 @@ void UserTuneHandler::updateFetchers()
         connect(FMprisFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
         connect(FMprisFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
     }
+    else
+    {
+        onStopPublishing();
+    }
 }
 
 bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
@@ -316,11 +326,11 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
             {
                 QDomElement itemElem = itemsElem.firstChildElement("item");
 
-                if (!itemElem.isNull() && !itemElem.firstChildElement().isNull())
+                if (!itemElem.isNull())
                 {
                     QDomElement tuneElem = itemElem.firstChildElement("tune");
 
-                    if (!tuneElem.isNull())
+                    if (!tuneElem.isNull() && !tuneElem.firstChildElement().isNull())
                     {
                         QDomElement elem;
                         elem = tuneElem.firstChildElement("artist");
@@ -364,27 +374,20 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
                         {
                             userSong.uri = elem.text();
                         }
-                    }
-                    else // !tuneElem.isNull() && !itemElem.firstChildElement().isNull()
-                    {
-                        if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
-                        {
-                            QMultiMap<int, QVariant> findData;
-                            findData.insert(RDR_TYPE,RIT_CONTACT);
-                            findData.insert(RDR_PREP_BARE_JID,senderJid.pBare());
 
-                            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
-                            {
-                                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
-                            }
-                        }
+                        setContactLabel(senderJid);
+                        onShowNotification(AStreamJid, senderJid);
+                    }
+                    else // !tuneElem.isNull() && !tuneElem.firstChildElement().isNull()
+                    {
+                        unsetContactLabel(senderJid);
                     }
                 }
             }
         }
     }
 
-    setContactTune(AStreamJid, senderJid, userSong);
+    setContactTune(senderJid, userSong);
 
     return true;
 }
@@ -445,12 +448,19 @@ void UserTuneHandler::onStopPublishing()
 }
 
 // TODO: выводить значок рядом с замком
-//void UserTuneHandler::onSetMainLabel()
-//{
-//    FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, FRostersModel->streamRoot(AStreamJid));
-//}
+void UserTuneHandler::onSetMainLabel()
+{
+//    Jid streamJid;
+//    int streams_size = FXmppStreams->xmppStreams().size();
 
-void UserTuneHandler::setContactTune(const Jid &AStreamJid, const Jid &AContactJid, const UserTuneData &ASong)
+//    for (int i = 0; i < streams_size; i++)
+//    {
+//        streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
+//        FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, FRostersModel->streamRoot(streamJid));
+//    }
+}
+
+void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData &ASong)
 {
     UserTuneData data = FContactTune.value(AContactJid);
     if (data != ASong)
@@ -460,13 +470,39 @@ void UserTuneHandler::setContactTune(const Jid &AStreamJid, const Jid &AContactJ
         else
             FContactTune.remove(AContactJid);
     }
-    setContactLabel();
-    onShowNotification(AStreamJid, AContactJid);
 }
 
+/*
+    set music icon
+*/
 void UserTuneHandler::setContactLabel()
 {
-    foreach (const Jid &AContactJid, FContactTune.keys())
+    if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+    {
+        foreach (const Jid &contactJid, FContactTune.keys())
+        {
+            QMultiMap<int, QVariant> findData;
+            findData.insert(RDR_TYPE,RIT_CONTACT);
+            findData.insert(RDR_PREP_BARE_JID,contactJid.pBare());
+
+            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
+            {
+                if (contactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
+                {
+                    FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+                }
+                else
+                {
+                    FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+                }
+            }
+        }
+    }
+}
+
+void UserTuneHandler::setContactLabel(const Jid &AContactJid)
+{
+    if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
     {
         QMultiMap<int, QVariant> findData;
         findData.insert(RDR_TYPE,RIT_CONTACT);
@@ -474,10 +510,7 @@ void UserTuneHandler::setContactLabel()
 
         foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
         {
-         // TODO: сделать удаление при изменении параметра OPV_UT_SHOW_ROSTER_LABEL; проверку вынести за цикл
-            if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool()
-                    && (AContactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
-                    && FContactTune.contains(AContactJid))
+            if (AContactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
             {
                 FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
             }
@@ -485,6 +518,39 @@ void UserTuneHandler::setContactLabel()
             {
                 FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
             }
+        }
+    }
+}
+
+void UserTuneHandler::unsetContactLabel()
+{
+    if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+    {
+        foreach (const Jid &AContactJid, FContactTune.keys())
+        {
+            QMultiMap<int, QVariant> findData;
+            findData.insert(RDR_TYPE,RIT_CONTACT);
+            findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
+
+            foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
+            {
+                FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+            }
+        }
+    }
+}
+
+void UserTuneHandler::unsetContactLabel(const Jid &AContactJid)
+{
+    if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+    {
+        QMultiMap<int, QVariant> findData;
+        findData.insert(RDR_TYPE,RIT_CONTACT);
+        findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
+
+        foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
+        {
+            FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
         }
     }
 }

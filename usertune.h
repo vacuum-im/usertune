@@ -80,6 +80,7 @@ public:
 protected slots:
     void onTrackChanged(UserTuneData);
     void onStopPublishing();
+    void onSetMainLabel();
     void onPlayerSatusChanged(PlayerStatus);
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);
@@ -91,8 +92,11 @@ protected slots:
     void onApplicationQuit();
 
 protected:
-    void setContactTune(const Jid &AStreamJid, const Jid &AContactJid, const UserTuneData &ASong);
+    void setContactTune(const Jid &AContactJid, const UserTuneData &ASong);
     void setContactLabel();
+    inline void setContactLabel(const Jid &AContactJid);
+    void unsetContactLabel();
+    inline void unsetContactLabel(const Jid &AContactJid);
     QString getTagFormat(const Jid &AContactJid);
     inline QString secToTime(unsigned short sec)
     {
@@ -133,7 +137,6 @@ private:
 
 private:
     void updateFetchers();
-    void deleteRosterIcon();
 };
 
 #endif // USERTUNE_H
