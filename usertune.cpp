@@ -73,8 +73,18 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
     FServiceDiscovery = qobject_cast<IServiceDiscovery *>(plugin->instance());
 
     plugin = APluginManager->pluginInterface("IXmppStreams").value(0,NULL);
-    if (!plugin) return false;
+    if (!plugin)
+    {
+        return false;
+    }
+
     FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
+
+    int streams_size = FXmppStreams->xmppStreams().size();
+    for (int i = 0; i < streams_size; i++)
+    {
+        connect(FXmppStreams->xmppStreams().at(i)->instance(), SIGNAL(aboutToClose()), this, SLOT(onStopPublishing()));
+    }
 
     plugin = APluginManager->pluginInterface("IRosterPlugin").value(0,NULL);
     if (plugin)
@@ -413,8 +423,9 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
     qDebug() << doc.toString();
 #endif
     Jid streamJid;
+    int streams_size = FXmppStreams->xmppStreams().size();
 
-    for (int i = 0; i < FXmppStreams->xmppStreams().size(); i++)
+    for (int i = 0; i < streams_size; i++)
     {
         streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
         FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
