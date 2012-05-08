@@ -14,32 +14,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="133"/>
+        <location filename="../../usertune.cpp" line="143"/>
         <source>User tune</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="138"/>
+        <location filename="../../usertune.cpp" line="148"/>
         <source>User tune notification</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="147"/>
+        <location filename="../../usertune.cpp" line="157"/>
         <source>When reminding of contact playing music</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="182"/>
+        <location filename="../../usertune.cpp" line="191"/>
         <source>User Tune</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="238"/>
+        <location filename="../../usertune.cpp" line="254"/>
         <source>User Tune Notification</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertune.cpp" line="501"/>
+        <location filename="../../usertune.cpp" line="591"/>
         <source>Listen:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -82,7 +82,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../usertuneoptions.cpp" line="14"/>
+        <location filename="../../usertuneoptions.cpp" line="17"/>
         <source>Not selected</source>
         <translation type="unfinished"></translation>
     </message>

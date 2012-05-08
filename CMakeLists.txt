@@ -37,8 +37,8 @@ elseif (UNIX)
 	include_directories("${CMAKE_INSTALL_PREFIX}/include/${INSTALL_APP_DIR}")
 endif (WIN32)
 
-set(SOURCES usertune.cpp imprisfetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp usertuneoptions.cpp usertunetypes.cpp)
-set(MY_MOC_HEADERS usertune.h imprisfetcher.h mprisfetcher1.h mprisfetcher2.h usertuneoptions.h)
+set(SOURCES usertune.cpp imetadatafetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp usertuneoptions.cpp usertunetypes.cpp)
+set(MY_MOC_HEADERS usertune.h imetadatafetcher.h mprisfetcher1.h mprisfetcher2.h usertuneoptions.h)
 set(HEADERS ${MY_MOC_HEADERS} usertunetypes.h)
 set(UIS usertuneoptions.ui)
 
