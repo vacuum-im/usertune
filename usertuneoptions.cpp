@@ -1,5 +1,8 @@
 #include <utils/options.h>
 
+#include "imetadatafetcher.h"
+#include "usertunetypes.h"
+
 #include <ui_usertuneoptions.h>
 #include "usertuneoptions.h"
 
@@ -11,7 +14,7 @@ UserTuneOptions::UserTuneOptions(QWidget *AParent) :
 {
     ui->setupUi(this);
 
-    ui->cb_mpris_version->addItem(tr("Not selected"), mprisNone);
+    ui->cb_mpris_version->addItem(tr("Not selected"), fetcherNone);
     ui->cb_mpris_version->addItem("MPRISv1", mprisV1);
     ui->cb_mpris_version->addItem("MPRISv2", mprisV2);
 
@@ -45,7 +48,7 @@ void UserTuneOptions::onRefreshPlayer()
 
 void UserTuneOptions::onVersionChange(int index)
 {
-    bool enabled = ui->cb_mpris_version->itemData(index).toInt() != mprisNone;
+    bool enabled = ui->cb_mpris_version->itemData(index).toInt() != fetcherNone;
     ui->le_format->setEnabled(enabled);
     ui->cb_playerName->setEnabled(enabled);
     ui->btn_refreshPlayers->setEnabled(enabled);
@@ -66,14 +69,14 @@ void UserTuneOptions::apply()
 
     QString name = ui->cb_playerName->currentText();
 
-    if (version != mprisNone)
+    if (version != fetcherNone)
     {
         Options::node(OPV_UT_PLAYER_VER).setValue(version);
         Options::node(OPV_UT_PLAYER_NAME).setValue(name);
     }
     else
     {
-        Options::node(OPV_UT_PLAYER_VER).setValue(mprisNone);
+        Options::node(OPV_UT_PLAYER_VER).setValue(fetcherNone);
         Options::node(OPV_UT_PLAYER_NAME).setValue(QString());
     }
 

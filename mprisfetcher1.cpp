@@ -27,7 +27,7 @@ const QDBusArgument &operator>> (const QDBusArgument &arg, PlayerStatus &ps)
 }
 
 MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QString::Null()) :
-    IMprisFetcher(parent)
+    IMetaDataFetcher(parent)
 {
     qDBusRegisterMetaType<PlayerStatus>();
 

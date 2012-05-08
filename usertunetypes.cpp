@@ -23,18 +23,6 @@ PlayerStatus &PlayerStatus::operator =(const PlayerStatus &APlayerStatus)
     return *this;
 }
 
-UserTuneData::UserTuneData() :
-    length(0),
-    rating(0)
-{
-
-}
-
-UserTuneData::~UserTuneData()
-{
-
-}
-
 bool UserTuneData::isEmpty() const
 {
     return artist.isEmpty() && source.isEmpty() && title.isEmpty() && track.isEmpty() && uri.isEmpty();

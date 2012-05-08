@@ -8,12 +8,12 @@
 
 QStringList getPlayersList(const int &ver);
 
-class IMprisFetcher : public QObject
+class IMetaDataFetcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit IMprisFetcher(QObject *parent);
-    virtual ~IMprisFetcher();
+    explicit IMetaDataFetcher(QObject *parent);
+    virtual ~IMetaDataFetcher();
     QVariantMap getMetadata();
     PlayerStatus getPlayerStatus();
     QString getPlayerName() const { return FPlayerName; }

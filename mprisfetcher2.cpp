@@ -5,7 +5,7 @@
 #include "mprisfetcher2.h"
 
 MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QString::Null()) :
-    IMprisFetcher(parent)
+    IMetaDataFetcher(parent)
 {
     FPlayerInterface = NULL;
 

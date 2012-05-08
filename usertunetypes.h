@@ -4,10 +4,14 @@
 #include <QString>
 #include <QUrl>
 
-enum MprisVer {
-    mprisNone = 0,
+enum FetchersVer {
+    fetcherNone = 0,
+#ifdef Q_WS_X11
     mprisV1 = 1,
     mprisV2
+#elif Q_WS_WIN
+
+#endif
 };
 
 enum PlayingStatus
@@ -19,20 +23,20 @@ enum PlayingStatus
 
 struct PlayerStatus
 {
-    PlayerStatus() : Play(PSStopped) {}
+    PlayerStatus() : Play(PSStopped), PlayRandom(0), Repeat(0), RepeatPlaylist(0) {}
     bool operator ==(const PlayerStatus &APlayerStatus) const;
     bool operator !=(const PlayerStatus &APlayerStatus) const;
     PlayerStatus &operator =(const PlayerStatus &APlayerStatus);
 
-    int Play;
-    int PlayRandom;
-    int Repeat;
-    int RepeatPlaylist;
+    unsigned short Play;
+    unsigned short PlayRandom;
+    unsigned short Repeat;
+    unsigned short RepeatPlaylist;
 };
 
 struct UserTuneData
 {
-    UserTuneData();
+    UserTuneData() : length(0), rating(0) {}
     ~UserTuneData();
     bool isEmpty() const;
     bool operator ==(const UserTuneData &AUserTune) const;
@@ -43,8 +47,8 @@ struct UserTuneData
     QString source;
     QString title;
     QString track;
-    unsigned int length;
-    unsigned int rating;
+    unsigned short length;
+    unsigned short rating;
     QUrl uri;
 };
 

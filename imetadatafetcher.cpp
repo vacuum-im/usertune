@@ -1,13 +1,18 @@
 #include <QMetaType>
-#include "imprisfetcher.h"
+#include "imetadatafetcher.h"
 
 QStringList getPlayersList(const int &ver)
 {
     QStringList ret_list;
+#ifdef Q_WS_X11
     QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.");
+#elif Q_WS_WIN
+
+#endif
 
     switch (ver)
     {
+#ifdef  Q_WS_X11
     case mprisV1:
         foreach (QString service, services)
         {
@@ -22,6 +27,9 @@ QStringList getPlayersList(const int &ver)
                 ret_list << service.replace("org.mpris.MediaPlayer2.","");
         }
         break;
+#elif Q_WS_WIN
+
+#endif
     default:
         break;
     }
@@ -29,28 +37,32 @@ QStringList getPlayersList(const int &ver)
     return ret_list;
 }
 
-IMprisFetcher::IMprisFetcher(QObject *parent) :
+IMetaDataFetcher::IMetaDataFetcher(QObject *parent) :
     QObject(parent)
 {
+#ifdef  Q_WS_X11
     QDBusConnection::sessionBus().connect("org.freedesktop.DBus",
                                           "/org/freedesktop/DBus",
                                           "org.freedesktop.DBus",
                                           "NameOwnerChanged",
                                           this,
                                           SLOT(onPlayersExistenceChanged(QString, QString, QString)));
+#endif
 }
 
-IMprisFetcher::~IMprisFetcher()
+IMetaDataFetcher::~IMetaDataFetcher()
 {
+#ifdef  Q_WS_X11
     QDBusConnection::sessionBus().disconnect("org.freedesktop.DBus",
                                            "/org/freedesktop/DBus",
                                            "org.freedesktop.DBus",
                                            "NameOwnerChanged",
                                            this,
                                            SLOT(onPlayersExistenceChanged(QString, QString, QString)));
+#endif
 }
 
-PlayerStatus IMprisFetcher::getPlayerStatus()
+PlayerStatus IMetaDataFetcher::getPlayerStatus()
 {
     if (!FPlayerInterface || !FPlayerInterface->isValid())
     {
@@ -60,7 +72,7 @@ PlayerStatus IMprisFetcher::getPlayerStatus()
     return FStatus;
 }
 
-QVariantMap IMprisFetcher::getMetadata()
+QVariantMap IMetaDataFetcher::getMetadata()
 {
     if (FPlayerInterface && FPlayerInterface->isValid())
     {

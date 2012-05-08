@@ -50,7 +50,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
     APluginInfo->name = tr("User Tune Handler");
     APluginInfo->description = tr("Allows hadle user tunes");
-    APluginInfo->version = "0.9.3";
+    APluginInfo->version = "0.9.4";
     APluginInfo->author = "Crying Angel";
     APluginInfo->homePage = "http://www.vacuum-im.org";
     APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -297,7 +297,7 @@ void UserTuneHandler::updateFetchers()
 #elif Q_WS_WIN
     // for Windows players...
 #endif
-    case mprisNone:
+    case fetcherNone:
         // disable send data, only recive
         break;
     default:

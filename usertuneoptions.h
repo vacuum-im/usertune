@@ -5,8 +5,6 @@
 
 #include <interfaces/ioptionsmanager.h>
 
-#include "imprisfetcher.h"
-
 namespace Ui {
     class UserTuneOptions;
 }

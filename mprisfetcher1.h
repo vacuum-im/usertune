@@ -1,9 +1,9 @@
 #ifndef MPRISFETCHER1_H
 #define MPRISFETCHER1_H
 
-#include "imprisfetcher.h"
+#include "imetadatafetcher.h"
 
-class MprisFetcher1 : public IMprisFetcher
+class MprisFetcher1 : public IMetaDataFetcher
 {
     Q_OBJECT
 public:

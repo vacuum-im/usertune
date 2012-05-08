@@ -32,7 +32,7 @@
 
 #include <utils/options.h>
 
-#include "imprisfetcher.h"
+#include "imetadatafetcher.h"
 #include "usertunetypes.h"
 
 #ifdef SVNINFO
@@ -124,7 +124,7 @@ private:
     IRostersModel *FRostersModel;
     IRostersViewPlugin *FRostersViewPlugin;
     INotifications *FNotifications;
-    IMprisFetcher *FMprisFetcher;
+    IMetaDataFetcher *FMprisFetcher;
 
     QString nodeName;
     int handlerId;
