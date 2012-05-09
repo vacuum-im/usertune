@@ -80,7 +80,7 @@ public:
 protected slots:
     void onTrackChanged(UserTuneData);
     void onStopPublishing();
-    void onSetMainLabel();
+    void onSetMainLabel(IXmppStream *);
     void onPlayerSatusChanged(PlayerStatus);
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);

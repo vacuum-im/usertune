@@ -66,6 +66,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 
     plugin = APluginManager->pluginInterface("IPEPManager").value(0,NULL);
     if (!plugin) return false;
+
     FPEPManager = qobject_cast<IPEPManager *>(plugin->instance());
 
     plugin = APluginManager->pluginInterface("IServiceDiscovery").value(0,NULL);
@@ -74,7 +75,9 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 
     plugin = APluginManager->pluginInterface("IXmppStreams").value(0,NULL);
     if (!plugin) return false;
+
     FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
+    connect(FXmppStreams->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
 
     int streams_size = FXmppStreams->xmppStreams().size();
     for (int i = 0; i < streams_size; i++)
@@ -162,8 +165,6 @@ bool UserTuneHandler::initObjects()
         label.order = RLO_USERTUNE;
         label.value = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
         FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(label);
-
-        onSetMainLabel();
     }
 
     return true;
@@ -466,17 +467,13 @@ void UserTuneHandler::onStopPublishing()
     }
 }
 
-// TODO: выводить значок рядом с замком
-void UserTuneHandler::onSetMainLabel()
+void UserTuneHandler::onSetMainLabel(IXmppStream *AXmppStream)
 {
-//    Jid streamJid;
-//    int streams_size = FXmppStreams->xmppStreams().size();
-
-//    for (int i = 0; i < streams_size; i++)
-//    {
-//        streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
-//        FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, FRostersModel->streamRoot(streamJid));
-//    }
+    IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
+    if (index!=NULL)
+    {
+        FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, index);
+    }
 }
 
 void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData &ASong)
