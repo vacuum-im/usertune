@@ -124,7 +124,7 @@ private:
     IRostersModel *FRostersModel;
     IRostersViewPlugin *FRostersViewPlugin;
     INotifications *FNotifications;
-    IMetaDataFetcher *FMprisFetcher;
+    IMetaDataFetcher *FMetaDataFetcher;
 
     QString nodeName;
     int handlerId;

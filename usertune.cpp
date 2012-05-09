@@ -36,7 +36,7 @@ UserTuneHandler::UserTuneHandler() :
     FServiceDiscovery(NULL),
     FXmppStreams(NULL),
     FOptionsManager(NULL),
-    FMprisFetcher(NULL)
+    FMetaDataFetcher(NULL)
 {
 
 }
@@ -229,7 +229,7 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
     }
     else if (ANode.path() == OPV_UT_PLAYER_NAME)
     {
-        FMprisFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+        FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
     }
     else if (ANode.path() == OPV_UT_PLAYER_VER)
     {
@@ -276,19 +276,19 @@ void UserTuneHandler::onNotificationRemoved(int ANotifyId)
 
 void UserTuneHandler::updateFetchers()
 {
-    if (FMprisFetcher)
+    if (FMetaDataFetcher)
     {
-        delete FMprisFetcher;
-        FMprisFetcher = NULL;
+        delete FMetaDataFetcher;
+        FMetaDataFetcher = NULL;
     }
 
     switch (Options::node(OPV_UT_PLAYER_VER).value().toUInt()) {
 #ifdef Q_WS_X11
     case mprisV1:
-        FMprisFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
+        FMetaDataFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
         break;
     case mprisV2:
-        FMprisFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
+        FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
         break;
 #elif Q_WS_WIN
     // for Windows players...
@@ -300,10 +300,10 @@ void UserTuneHandler::updateFetchers()
         break;
     }
 
-    if (FMprisFetcher)
+    if (FMetaDataFetcher)
     {
-        connect(FMprisFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
-        connect(FMprisFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
+        connect(FMetaDataFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
+        connect(FMetaDataFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
     }
     else
     {
