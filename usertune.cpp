@@ -73,11 +73,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
     FServiceDiscovery = qobject_cast<IServiceDiscovery *>(plugin->instance());
 
     plugin = APluginManager->pluginInterface("IXmppStreams").value(0,NULL);
-    if (!plugin)
-    {
-        return false;
-    }
-
+    if (!plugin) return false;
     FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
 
     int streams_size = FXmppStreams->xmppStreams().size();
@@ -449,12 +445,24 @@ void UserTuneHandler::onStopPublishing()
     root.appendChild(tune);
 
     Jid streamJid;
-    int streams_size = FXmppStreams->xmppStreams().size();
+    IXmppStream *stream = qobject_cast<IXmppStream *>(sender());
 
-    for (int i = 0; i < streams_size; i++)
+    if (stream != NULL)
     {
-        streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
+        streamJid = stream->streamJid();
         FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
+        FContactTune.remove(streamJid);
+    }
+    else
+    {
+        int streams_size = FXmppStreams->xmppStreams().size();
+
+        for (int i = 0; i < streams_size; i++)
+        {
+            streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
+            FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
+            FContactTune.clear();
+        }
     }
 }
 
