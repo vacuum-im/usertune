@@ -31,8 +31,9 @@
 #include <interfaces/irostersview.h>
 
 #include <utils/options.h>
-
+#ifdef Q_WS_X11
 #include "imetadatafetcher.h"
+#endif
 #include "usertunetypes.h"
 
 #ifdef SVNINFO
@@ -78,10 +79,13 @@ public:
     virtual bool processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza);
 
 protected slots:
+#ifdef Q_WS_X11
     void onTrackChanged(UserTuneData);
-    void onStopPublishing();
-    void onSetMainLabel(IXmppStream *);
     void onPlayerSatusChanged(PlayerStatus);
+    void onStopPublishing();
+#endif
+    void onSetMainLabel(IXmppStream *);
+    void onUnsetMainLabel(IXmppStream *);
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
@@ -98,7 +102,7 @@ protected:
     void unsetContactLabel();
     inline void unsetContactLabel(const Jid &AContactJid);
     QString getTagFormat(const Jid &AContactJid);
-    inline QString secToTime(unsigned short sec)
+    QString secToTime(unsigned short sec)
     {
         if (sec == 0)
         {
@@ -124,19 +128,24 @@ private:
     IRostersModel *FRostersModel;
     IRostersViewPlugin *FRostersViewPlugin;
     INotifications *FNotifications;
+#ifdef Q_WS_X11
     IMetaDataFetcher *FMetaDataFetcher;
+#endif
 
     QString nodeName;
     int handlerId;
     int FUserTuneLabelId;
+#ifdef Q_WS_X11
     QString FFormatTag;
-    QString FTag;
+#endif
 
     QMap<Jid, UserTuneData> FContactTune;
     QMap<int, Jid> FNotifies;
 
 private:
+#ifdef Q_WS_X11
     void updateFetchers();
+#endif
 };
 
 #endif // USERTUNE_H

@@ -16,10 +16,12 @@
 #include "usertune.h"
 #include "mprisfetcher1.h"
 #include "mprisfetcher2.h"
+#ifdef Q_WS_X11
 #include "usertuneoptions.h"
+#endif
 
 #include "definitions.h"
-
+#ifdef Q_WS_X11
 #define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
 { \
     QDomElement tag = (document).createElement(child_name); \
@@ -27,7 +29,7 @@
     tag.appendChild(text); \
     (root_element).appendChild(tag); \
 }
-
+#endif
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
 
@@ -35,8 +37,10 @@ UserTuneHandler::UserTuneHandler() :
     FPEPManager(NULL),
     FServiceDiscovery(NULL),
     FXmppStreams(NULL),
-    FOptionsManager(NULL),
-    FMetaDataFetcher(NULL)
+    FOptionsManager(NULL)
+#ifdef Q_WS_X11
+    , FMetaDataFetcher(NULL)
+#endif
 {
 
 }
@@ -50,7 +54,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
     APluginInfo->name = tr("User Tune Handler");
     APluginInfo->description = tr("Allows hadle user tunes");
-    APluginInfo->version = "0.9.4";
+    APluginInfo->version = "0.9.5";
     APluginInfo->author = "Crying Angel";
     APluginInfo->homePage = "http://www.vacuum-im.org";
     APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -78,6 +82,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 
     FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
     connect(FXmppStreams->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
+    connect(FXmppStreams->instance(), SIGNAL(closed(IXmppStream *)), this, SLOT(onUnsetMainLabel(IXmppStream*)));
 
     int streams_size = FXmppStreams->xmppStreams().size();
     for (int i = 0; i < streams_size; i++)
@@ -198,7 +203,13 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
     QMultiMap<int, IOptionsWidget *> widgets;
     if (FOptionsManager && ANodeId==OPN_USERTUNE)
     {
+#ifdef Q_WS_X11
         widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
+#elif Q_WS_WIN
+        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
+        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_TAG_FORMAT),tr("Tag format:"),AParent));
+        widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_PLAYER_NAME),tr("Player name:"),AParent));
+#endif
     }
     return widgets;
 }
@@ -207,8 +218,9 @@ void UserTuneHandler::onOptionsOpened()
 {
     onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
     onOptionsChanged(Options::node(OPV_UT_TAG_FORMAT));
-
+#ifdef Q_WS_X11
     updateFetchers();
+#endif
 }
 
 void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
@@ -228,6 +240,7 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
     {
         FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
     }
+#ifdef Q_WS_X11
     else if (ANode.path() == OPV_UT_PLAYER_NAME)
     {
         FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
@@ -236,6 +249,7 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
     {
         updateFetchers();
     }
+#endif
 }
 
 void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &AContactJid)
@@ -274,7 +288,7 @@ void UserTuneHandler::onNotificationRemoved(int ANotifyId)
         FNotifies.remove(ANotifyId);
     }
 }
-
+#ifdef Q_WS_X11
 void UserTuneHandler::updateFetchers()
 {
     if (FMetaDataFetcher)
@@ -311,7 +325,7 @@ void UserTuneHandler::updateFetchers()
         onStopPublishing();
     }
 }
-
+#endif
 bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
 {
     Q_UNUSED(AStreamJid)
@@ -398,7 +412,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
 
     return true;
 }
-
+#ifdef Q_WS_X11
 void UserTuneHandler::onTrackChanged(UserTuneData data)
 {
     QDomDocument doc("");
@@ -466,13 +480,25 @@ void UserTuneHandler::onStopPublishing()
         }
     }
 }
-
+#endif
+/*
+    set music icon to main accaunt
+*/
 void UserTuneHandler::onSetMainLabel(IXmppStream *AXmppStream)
 {
     IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
     if (index!=NULL)
     {
         FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, index);
+    }
+}
+
+void UserTuneHandler::onUnsetMainLabel(IXmppStream *AXmppStream)
+{
+    IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
+    if (index!=NULL)
+    {
+        FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId, index);
     }
 }
 
@@ -489,7 +515,7 @@ void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData 
 }
 
 /*
-    set music icon
+    set music icon to contact
 */
 void UserTuneHandler::setContactLabel()
 {
@@ -573,17 +599,17 @@ void UserTuneHandler::unsetContactLabel(const Jid &AContactJid)
 
 QString UserTuneHandler::getTagFormat(const Jid &AContactJid)
 {
-    FTag = Qt::escape(FFormatTag);
+    QString Tag = Qt::escape(FFormatTag);
 
-    FTag.replace(QString("%A"), Qt::escape(FContactTune.value(AContactJid).artist));
-    FTag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(AContactJid).length)));
-    FTag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(AContactJid).rating)));
-    FTag.replace(QString("%S"), Qt::escape(FContactTune.value(AContactJid).source));
-    FTag.replace(QString("%T"), Qt::escape(FContactTune.value(AContactJid).title));
-    FTag.replace(QString("%N"), Qt::escape(FContactTune.value(AContactJid).track));
-    FTag.replace(QString("%U"), Qt::escape(FContactTune.value(AContactJid).uri.toString()));
+    Tag.replace(QString("%A"), Qt::escape(FContactTune.value(AContactJid).artist));
+    Tag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(AContactJid).length)));
+    Tag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(AContactJid).rating)));
+    Tag.replace(QString("%S"), Qt::escape(FContactTune.value(AContactJid).source));
+    Tag.replace(QString("%T"), Qt::escape(FContactTune.value(AContactJid).title));
+    Tag.replace(QString("%N"), Qt::escape(FContactTune.value(AContactJid).track));
+    Tag.replace(QString("%U"), Qt::escape(FContactTune.value(AContactJid).uri.toString()));
 
-    return FTag;
+    return Tag;
 }
 
 void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips)
