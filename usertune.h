@@ -19,6 +19,7 @@
 #define USERTUNE_H
 
 #include <QTextDocument>
+#include <QTimer>
 
 #include <interfaces/ipluginmanager.h>
 #include <interfaces/ipepmanager.h>
@@ -81,6 +82,7 @@ public:
 protected slots:
 #ifdef Q_WS_X11
     void onTrackChanged(UserTuneData);
+    void onSendPep();
     void onPlayerSatusChanged(PlayerStatus);
     void onStopPublishing();
 #endif
@@ -130,6 +132,8 @@ private:
     INotifications *FNotifications;
 #ifdef Q_WS_X11
     IMetaDataFetcher *FMetaDataFetcher;
+    UserTuneData FUserTuneData;
+    QTimer FTimer;
 #endif
 
     QString nodeName;

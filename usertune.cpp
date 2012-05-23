@@ -21,6 +21,7 @@
 #endif
 
 #include "definitions.h"
+
 #ifdef Q_WS_X11
 #define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
 { \
@@ -30,8 +31,10 @@
     (root_element).appendChild(tag); \
 }
 #endif
+
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
+#define PEP_SEND_DELAY 2*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
 
 UserTuneHandler::UserTuneHandler() :
     FPEPManager(NULL),
@@ -42,7 +45,11 @@ UserTuneHandler::UserTuneHandler() :
     , FMetaDataFetcher(NULL)
 #endif
 {
-
+#ifdef Q_WS_X11
+    FTimer.setSingleShot(true);
+    FTimer.setInterval(PEP_SEND_DELAY);
+    connect(&FTimer, SIGNAL(timeout()), this, SLOT(onSendPep()));
+#endif
 }
 
 UserTuneHandler::~UserTuneHandler()
@@ -54,7 +61,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
     APluginInfo->name = tr("User Tune Handler");
     APluginInfo->description = tr("Allows hadle user tunes");
-    APluginInfo->version = "0.9.5";
+    APluginInfo->version = "0.9.6";
     APluginInfo->author = "Crying Angel";
     APluginInfo->homePage = "http://www.vacuum-im.org";
     APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -412,8 +419,21 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
 
     return true;
 }
+
 #ifdef Q_WS_X11
 void UserTuneHandler::onTrackChanged(UserTuneData data)
+{
+    if (FTimer.isActive())
+    {
+        FTimer.stop();
+    }
+
+    FUserTuneData = data;
+
+    FTimer.start();
+}
+
+void UserTuneHandler::onSendPep()
 {
     QDomDocument doc("");
     QDomElement root = doc.createElement("item");
@@ -422,13 +442,17 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
     QDomElement tune = doc.createElement("tune");
     root.appendChild(tune);
 
-    ADD_CHILD_ELEMENT (doc, tune, "artist", data.artist)
-    ADD_CHILD_ELEMENT (doc, tune, "length", QString::number(data.length))
-    ADD_CHILD_ELEMENT (doc, tune, "rating", QString::number(data.rating))
-    ADD_CHILD_ELEMENT (doc, tune, "source", data.source)
-    ADD_CHILD_ELEMENT (doc, tune, "title", data.title)
-    ADD_CHILD_ELEMENT (doc, tune, "track", data.track)
-    ADD_CHILD_ELEMENT (doc, tune, "uri", data.uri.toString())
+    ADD_CHILD_ELEMENT (doc, tune, "artist", FUserTuneData.artist)
+
+    if (FUserTuneData.length > 0) {
+        ADD_CHILD_ELEMENT (doc, tune, "length", QString::number(FUserTuneData.length))
+    }
+
+    ADD_CHILD_ELEMENT (doc, tune, "rating", QString::number(FUserTuneData.rating))
+    ADD_CHILD_ELEMENT (doc, tune, "source", FUserTuneData.source)
+    ADD_CHILD_ELEMENT (doc, tune, "title", FUserTuneData.title)
+    ADD_CHILD_ELEMENT (doc, tune, "track", FUserTuneData.track)
+    ADD_CHILD_ELEMENT (doc, tune, "uri", FUserTuneData.uri.toString())
 
 #ifndef QT_NO_DEBUG
     qDebug() << doc.toString();
@@ -603,7 +627,7 @@ QString UserTuneHandler::getTagFormat(const Jid &AContactJid)
 
     Tag.replace(QString("%A"), Qt::escape(FContactTune.value(AContactJid).artist));
     Tag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(AContactJid).length)));
-    Tag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(AContactJid).rating)));
+    Tag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(AContactJid).rating))); // ★☆✮
     Tag.replace(QString("%S"), Qt::escape(FContactTune.value(AContactJid).source));
     Tag.replace(QString("%T"), Qt::escape(FContactTune.value(AContactJid).title));
     Tag.replace(QString("%N"), Qt::escape(FContactTune.value(AContactJid).track));
