@@ -1,0 +1,6 @@
+[main]
+host = http://www.transifex.net
+
+[vacuum-im.usertunets]
+file_filter = <lang>/usertune.ts
+source_lang = ru
