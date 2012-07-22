@@ -26,6 +26,9 @@
 #include <interfaces/iservicediscovery.h>
 #include <interfaces/ixmppstreams.h>
 #include <interfaces/ioptionsmanager.h>
+#ifdef Q_WS_X11
+#include <interfaces/imessageprocessor.h>
+#endif
 #include <interfaces/inotifications.h>
 #include <interfaces/iroster.h>
 #include <interfaces/irostersmodel.h>
@@ -51,12 +54,21 @@ class UserTuneHandler :
     public IPlugin,
     public IOptionsHolder,
     public IPEPHandler
+#ifdef Q_WS_X11
+        ,
+    public IMessageEditor
+#endif
+
 {
     Q_OBJECT
     Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 public:
     explicit UserTuneHandler();
     ~UserTuneHandler();
+    //IMessageEditor
+#ifdef Q_WS_X11
+    virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);
+#endif
     //IPlugin
     virtual QObject *instance()
     {
@@ -103,7 +115,7 @@ protected:
     inline void setContactLabel(const Jid &AContactJid);
     void unsetContactLabel();
     inline void unsetContactLabel(const Jid &AContactJid);
-    QString getTagFormat(const Jid &AContactJid);
+    QString getTagFormat(const Jid &AContactJid) const;
     QString secToTime(unsigned short sec)
     {
         if (sec == 0)
@@ -136,8 +148,7 @@ private:
     QTimer FTimer;
 #endif
 
-    QString nodeName;
-    int handlerId;
+    int FHandlerId;
     int FUserTuneLabelId;
 #ifdef Q_WS_X11
     QString FFormatTag;

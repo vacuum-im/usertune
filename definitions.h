@@ -4,6 +4,8 @@
 //Namespaces
 //#define NS_something                      "somesing"
 
+//MessageEditorOrders
+#define MEO_USERTUNE                 500
 
 //Notification Types
 #define NNT_USERTUNE                 "UserTuneNotify"

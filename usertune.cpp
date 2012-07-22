@@ -34,7 +34,7 @@
 
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
-#define PEP_SEND_DELAY 2*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
+#define PEP_SEND_DELAY 3*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
 
 UserTuneHandler::UserTuneHandler() :
     FPEPManager(NULL),
@@ -61,7 +61,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
     APluginInfo->name = tr("User Tune Handler");
     APluginInfo->description = tr("Allows hadle user tunes");
-    APluginInfo->version = "0.9.6";
+    APluginInfo->version = "0.9.7";
     APluginInfo->author = "Crying Angel";
     APluginInfo->homePage = "http://www.vacuum-im.org";
     APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -98,18 +98,21 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
     }
 
     plugin = APluginManager->pluginInterface("IRosterPlugin").value(0,NULL);
+    Q_ASSERT(plugin);
     if (plugin)
     {
         FRosterPlugin = qobject_cast<IRosterPlugin *>(plugin->instance());
     }
 
     plugin = APluginManager->pluginInterface("IRostersModel").value(0,NULL);
+    Q_ASSERT(plugin);
     if (plugin)
     {
         FRostersModel = qobject_cast<IRostersModel *>(plugin->instance());
     }
 
     plugin = APluginManager->pluginInterface("IRostersViewPlugin").value(0,NULL);
+    Q_ASSERT(plugin);
     if (plugin)
     {
         FRostersViewPlugin = qobject_cast<IRostersViewPlugin *>(plugin->instance());
@@ -119,8 +122,19 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
                     SLOT(onRosterIndexToolTips(IRosterIndex *, int, QMultiMap<int,QString> &)));
         }
     }
-
+#ifdef Q_WS_X11
+    plugin = APluginManager()->pluginInterface("IMessageProcessor").value(0,NULL);
+    Q_ASSERT(plugin);
+    if (plugin)
+    {
+            IMessageProcessor *messageProcessor = qobject_cast<IMessageProcessor *>(plugin->instance());
+            Q_ASSERT(messageProcessor);
+            if (messageProcessor)
+                    messageProcessor->insertMessageEditor(MEO_USERTUNE, this);
+    }
+#endif
     plugin = APluginManager->pluginInterface("INotifications").value(0,NULL);
+    Q_ASSERT(plugin);
     if (plugin)
     {
         FNotifications = qobject_cast<INotifications *>(plugin->instance());
@@ -132,6 +146,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
     }
 
     plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
+    Q_ASSERT(plugin);
     if (plugin)
     {
         FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
@@ -147,7 +162,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 
 bool UserTuneHandler::initObjects()
 {
-    handlerId = FPEPManager->insertNodeHandler(TUNE_PROTOCOL_URL, this);
+    FHandlerId = FPEPManager->insertNodeHandler(TUNE_PROTOCOL_URL, this);
 
     IDiscoFeature feature;
     feature.active = true;
@@ -185,14 +200,14 @@ bool UserTuneHandler::initObjects()
 bool UserTuneHandler::initSettings()
 {
     Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,false);
-    Options::setDefaultValue(OPV_UT_TAG_FORMAT,"%T - %A - %S");
+    Options::setDefaultValue(OPV_UT_TAG_FORMAT,QLatin1String("%T - %A - %S"));
 #ifdef Q_WS_X11
-    Options::setDefaultValue(OPV_UT_PLAYER_NAME,"amarok");
-    Options::setDefaultValue(OPV_UT_PLAYER_VER,mprisV1);
+    Options::setDefaultValue(OPV_UT_PLAYER_NAME,QLatin1String("amarok"));
+    Options::setDefaultValue(OPV_UT_PLAYER_VER,FetchrVer::mprisV1);
 #elif Q_WS_WIN
     // TODO: сделать для windows
-    Options::setDefaultValue(OPV_UT_PLAYER_NAME,"");
-    Options::setDefaultValue(OPV_UT_PLAYER_VER,"");
+    Options::setDefaultValue(OPV_UT_PLAYER_NAME,QLatin1String(""));
+    Options::setDefaultValue(OPV_UT_PLAYER_VER,FetchrVer::fetcherNone);
 #endif
 
     if (FOptionsManager)
@@ -248,16 +263,52 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
         FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
     }
 #ifdef Q_WS_X11
-    else if (ANode.path() == OPV_UT_PLAYER_NAME)
-    {
-        FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
-    }
     else if (ANode.path() == OPV_UT_PLAYER_VER)
     {
         updateFetchers();
     }
+    else if (ANode.path() == OPV_UT_PLAYER_NAME)
+    {
+        if (FMetaDataFetcher)
+        {
+            FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+        }
+    }
 #endif
 }
+
+#ifdef Q_WS_X11
+bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection)
+{
+    Q_UNUSED(AStreamJid);
+    Q_ASSERT(FMetaDataFetcher);
+
+    if (FMetaDataFetcher && AOrder == MEO_MULTIUSERCHAT && ADirection == IMessageProcessor::MessageOut)
+    {
+        if (AMessage.body.contains(QLatin1String("/play"), Qt::CaseInsensitive) ||
+                AMessage.body.contains(QLatin1String("/pause"), Qt::CaseInsensitive))
+        {
+            FMetaDataFetcher->playerPlay();
+        }
+        else if (AMessage.body.contains(QLatin1String("/stop"), Qt::CaseInsensitive))
+        {
+            FMetaDataFetcher->playerStop();
+        }
+        else if (AMessage.body.contains(QLatin1String("/next"), Qt::CaseInsensitive))
+        {
+            FMetaDataFetcher->playerNext();
+        }
+        else if (AMessage.body.contains(QLatin1String("/prev"), Qt::CaseInsensitive))
+        {
+            FMetaDataFetcher->playerPrev();
+        }
+
+        return true;
+    }
+
+    return false;
+}
+#endif
 
 void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &AContactJid)
 {
@@ -306,16 +357,16 @@ void UserTuneHandler::updateFetchers()
 
     switch (Options::node(OPV_UT_PLAYER_VER).value().toUInt()) {
 #ifdef Q_WS_X11
-    case mprisV1:
+    case FetchrVer::mprisV1:
         FMetaDataFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
         break;
-    case mprisV2:
+    case FetchrVer::mprisV2:
         FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
         break;
 #elif Q_WS_WIN
     // for Windows players...
 #endif
-    case fetcherNone:
+    case FetchrVer::fetcherNone:
         // disable send data, only recive
         break;
     default:
@@ -339,65 +390,65 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
     Jid senderJid;
     UserTuneData userSong;
 
-    QDomElement replyElem = AStanza.document().firstChildElement("message");
+    QDomElement replyElem = AStanza.document().firstChildElement(QLatin1String("message"));
 
     if (!replyElem.isNull())
     {
         senderJid = replyElem.attribute("from");
-        QDomElement eventElem = replyElem.firstChildElement("event");
+        QDomElement eventElem = replyElem.firstChildElement(QLatin1String("event"));
 
         if (!eventElem.isNull())
         {
-            QDomElement itemsElem = eventElem.firstChildElement("items");
+            QDomElement itemsElem = eventElem.firstChildElement(QLatin1String("items"));
 
             if (!itemsElem.isNull())
             {
-                QDomElement itemElem = itemsElem.firstChildElement("item");
+                QDomElement itemElem = itemsElem.firstChildElement(QLatin1String("item"));
 
                 if (!itemElem.isNull())
                 {
-                    QDomElement tuneElem = itemElem.firstChildElement("tune");
+                    QDomElement tuneElem = itemElem.firstChildElement(QLatin1String("tune"));
 
                     if (!tuneElem.isNull() && !tuneElem.firstChildElement().isNull())
                     {
                         QDomElement elem;
-                        elem = tuneElem.firstChildElement("artist");
+                        elem = tuneElem.firstChildElement(QLatin1String("artist"));
                         if (!elem.isNull())
                         {
                             userSong.artist = elem.text();
                         }
 
-                        elem = tuneElem.firstChildElement("length");
+                        elem = tuneElem.firstChildElement(QLatin1String("length"));
                         if (!elem.isNull())
                         {
                             userSong.length = elem.text().toUInt();
                         }
 
-                        elem = tuneElem.firstChildElement("rating");
+                        elem = tuneElem.firstChildElement(QLatin1String("rating"));
                         if (!elem.isNull())
                         {
                             userSong.rating = elem.text().toUInt();
                         }
 
-                        elem = tuneElem.firstChildElement("source");
+                        elem = tuneElem.firstChildElement(QLatin1String("source"));
                         if (!elem.isNull())
                         {
                             userSong.source = elem.text();
                         }
 
-                        elem = tuneElem.firstChildElement("title");
+                        elem = tuneElem.firstChildElement(QLatin1String("title"));
                         if (!elem.isNull())
                         {
                             userSong.title = elem.text();
                         }
 
-                        elem = tuneElem.firstChildElement("track");
+                        elem = tuneElem.firstChildElement(QLatin1String("track"));
                         if (!elem.isNull())
                         {
                             userSong.track = elem.text();
                         }
 
-                        elem = tuneElem.firstChildElement("uri");
+                        elem = tuneElem.firstChildElement(QLatin1String("uri"));
                         if (!elem.isNull())
                         {
                             userSong.uri = elem.text();
@@ -435,24 +486,24 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
 
 void UserTuneHandler::onSendPep()
 {
-    QDomDocument doc("");
-    QDomElement root = doc.createElement("item");
+    QDomDocument doc(QLatin1String(""));
+    QDomElement root = doc.createElement(QLatin1String("item"));
     doc.appendChild(root);
 
-    QDomElement tune = doc.createElement("tune");
+    QDomElement tune = doc.createElement(QLatin1String("tune"));
     root.appendChild(tune);
 
-    ADD_CHILD_ELEMENT (doc, tune, "artist", FUserTuneData.artist)
+    ADD_CHILD_ELEMENT (doc, tune, QLatin1String("artist"), FUserTuneData.artist)
 
     if (FUserTuneData.length > 0) {
-        ADD_CHILD_ELEMENT (doc, tune, "length", QString::number(FUserTuneData.length))
+        ADD_CHILD_ELEMENT (doc, tune, QLatin1String("length"), QString::number(FUserTuneData.length))
     }
 
-    ADD_CHILD_ELEMENT (doc, tune, "rating", QString::number(FUserTuneData.rating))
-    ADD_CHILD_ELEMENT (doc, tune, "source", FUserTuneData.source)
-    ADD_CHILD_ELEMENT (doc, tune, "title", FUserTuneData.title)
-    ADD_CHILD_ELEMENT (doc, tune, "track", FUserTuneData.track)
-    ADD_CHILD_ELEMENT (doc, tune, "uri", FUserTuneData.uri.toString())
+    ADD_CHILD_ELEMENT (doc, tune, QLatin1String("rating"), QString::number(FUserTuneData.rating))
+    ADD_CHILD_ELEMENT (doc, tune, QLatin1String("source"), FUserTuneData.source)
+    ADD_CHILD_ELEMENT (doc, tune, QLatin1String("title"), FUserTuneData.title)
+    ADD_CHILD_ELEMENT (doc, tune, QLatin1String("track"), FUserTuneData.track)
+    ADD_CHILD_ELEMENT (doc, tune, QLatin1String("uri"), FUserTuneData.uri.toString())
 
 #ifndef QT_NO_DEBUG
     qDebug() << doc.toString();
@@ -476,11 +527,11 @@ void UserTuneHandler::onPlayerSatusChanged(PlayerStatus status)
 
 void UserTuneHandler::onStopPublishing()
 {
-    QDomDocument doc("");
-    QDomElement root = doc.createElement("item");
+    QDomDocument doc(QLatin1String(""));
+    QDomElement root = doc.createElement(QLatin1String("item"));
     doc.appendChild(root);
 
-    QDomElement tune = doc.createElement("tune");
+    QDomElement tune = doc.createElement(QLatin1String("tune"));
     root.appendChild(tune);
 
     Jid streamJid;
@@ -621,19 +672,19 @@ void UserTuneHandler::unsetContactLabel(const Jid &AContactJid)
     }
 }
 
-QString UserTuneHandler::getTagFormat(const Jid &AContactJid)
+QString UserTuneHandler::getTagFormat(const Jid &AContactJid) const
 {
-    QString Tag = Qt::escape(FFormatTag);
+    QString Tag = FFormatTag;
+// TODO переделать, все в один проход и не оставлять разделятелей
+    Tag.replace(QLatin1String("%A"), FContactTune.value(AContactJid).artist);
+    Tag.replace(QLatin1String("%L"), secToTime(FContactTune.value(AContactJid).length));
+    Tag.replace(QLatin1String("%R"), QString::number(FContactTune.value(AContactJid).rating)); // ★☆✮
+    Tag.replace(QLatin1String("%S"), FContactTune.value(AContactJid).source);
+    Tag.replace(QLatin1String("%T"), FContactTune.value(AContactJid).title);
+    Tag.replace(QLatin1String("%N"), FContactTune.value(AContactJid).track);
+    Tag.replace(QLatin1String("%U"), FContactTune.value(AContactJid).uri.toString());
 
-    Tag.replace(QString("%A"), Qt::escape(FContactTune.value(AContactJid).artist));
-    Tag.replace(QString("%L"), Qt::escape(secToTime(FContactTune.value(AContactJid).length)));
-    Tag.replace(QString("%R"), Qt::escape(QString::number(FContactTune.value(AContactJid).rating))); // ★☆✮
-    Tag.replace(QString("%S"), Qt::escape(FContactTune.value(AContactJid).source));
-    Tag.replace(QString("%T"), Qt::escape(FContactTune.value(AContactJid).title));
-    Tag.replace(QString("%N"), Qt::escape(FContactTune.value(AContactJid).track));
-    Tag.replace(QString("%U"), Qt::escape(FContactTune.value(AContactJid).uri.toString()));
-
-    return Tag;
+    return Qt::escape(Tag);
 }
 
 void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips)
@@ -643,15 +694,16 @@ void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, 
         Jid contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
         if (FContactTune.contains(contactJid))
         {
-            QString tip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(getTagFormat(contactJid).replace("\n","<br />"));
-            AToolTips.insert(RTTO_USERTUNE,tip);
+            QString format = getTagFormat(contactJid).replace(QLatin1String("\n"),QLatin1String("<br />"));
+
+            AToolTips.insert(RTTO_USERTUNE, QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(format));
         }
     }
 }
 
 void UserTuneHandler::onApplicationQuit()
 {
-    FPEPManager->removeNodeHandler(handlerId);
+    FPEPManager->removeNodeHandler(FHandlerId);
 }
 
 Q_EXPORT_PLUGIN2(plg_pepmanager, UserTuneHandler)

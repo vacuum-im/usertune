@@ -4,15 +4,17 @@
 #include <QString>
 #include <QUrl>
 
-enum FetchersVer {
-    fetcherNone = 0,
-#ifdef Q_WS_X11
-    mprisV1 = 1,
-    mprisV2
-#elif Q_WS_WIN
+namespace FetchrVer {
+    enum FetchersVer {
+        fetcherNone = 0,
+    #ifdef Q_WS_X11
+        mprisV1 = 1,
+        mprisV2
+    #elif Q_WS_WIN
 
-#endif
-};
+    #endif
+    };
+}
 
 enum PlayingStatus
 {

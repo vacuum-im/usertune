@@ -14,16 +14,16 @@ UserTuneOptions::UserTuneOptions(QWidget *AParent) :
 {
     ui->setupUi(this);
 
-    ui->cb_mpris_version->addItem(tr("Not selected"), fetcherNone);
-    ui->cb_mpris_version->addItem("MPRISv1", mprisV1);
-    ui->cb_mpris_version->addItem("MPRISv2", mprisV2);
+    ui->cb_mpris_version->addItem(tr("Not selected"), FetchrVer::fetcherNone);
+    ui->cb_mpris_version->addItem(QLatin1String("MPRISv1"), FetchrVer::mprisV1);
+    ui->cb_mpris_version->addItem(QLatin1String("MPRISv2"), FetchrVer::mprisV2);
 
     connect(ui->cb_mpris_version,SIGNAL(currentIndexChanged(int)),this,SLOT(onVersionChange(int)));
 
-    connect(ui->cb_playerName,SIGNAL(currentIndexChanged(int)),SIGNAL(modified()));
-    connect(ui->chb_showIcon,SIGNAL(stateChanged(int)),SIGNAL(modified()));
-    connect(ui->le_format,SIGNAL(textChanged(const QString &)),SIGNAL(modified()));
-    connect(ui->btn_refreshPlayers, SIGNAL(clicked()), SLOT(onRefreshPlayer()));
+    connect(ui->cb_playerName,SIGNAL(currentIndexChanged(int)),this,SIGNAL(modified()));
+    connect(ui->chb_showIcon,SIGNAL(stateChanged(int)),this,SIGNAL(modified()));
+    connect(ui->le_format,SIGNAL(textChanged(const QString &)),this,SIGNAL(modified()));
+    connect(ui->btn_refreshPlayers, SIGNAL(clicked()),this, SLOT(onRefreshPlayer()));
 
     reset();
 }
@@ -48,7 +48,7 @@ void UserTuneOptions::onRefreshPlayer()
 
 void UserTuneOptions::onVersionChange(int index)
 {
-    bool enabled = ui->cb_mpris_version->itemData(index).toInt() != fetcherNone;
+    bool enabled = ui->cb_mpris_version->itemData(index).toInt() != FetchrVer::fetcherNone;
     ui->le_format->setEnabled(enabled);
     ui->cb_playerName->setEnabled(enabled);
     ui->btn_refreshPlayers->setEnabled(enabled);
@@ -69,15 +69,15 @@ void UserTuneOptions::apply()
 
     QString name = ui->cb_playerName->currentText();
 
-    if (version != fetcherNone)
+    if (version != FetchrVer::fetcherNone)
     {
         Options::node(OPV_UT_PLAYER_VER).setValue(version);
         Options::node(OPV_UT_PLAYER_NAME).setValue(name);
     }
     else
     {
-        Options::node(OPV_UT_PLAYER_VER).setValue(fetcherNone);
-        Options::node(OPV_UT_PLAYER_NAME).setValue(QString());
+        Options::node(OPV_UT_PLAYER_VER).setValue(FetchrVer::fetcherNone);
+        Options::node(OPV_UT_PLAYER_NAME).setValue(QLatin1String(""));
     }
 
     emit childApply();
