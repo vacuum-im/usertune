@@ -34,7 +34,7 @@
 
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
-#define PEP_SEND_DELAY 3*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
+#define PEP_SEND_DELAY 5*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
 
 UserTuneHandler::UserTuneHandler() :
     FPEPManager(NULL),
@@ -42,7 +42,9 @@ UserTuneHandler::UserTuneHandler() :
     FXmppStreams(NULL),
     FOptionsManager(NULL)
 #ifdef Q_WS_X11
-    , FMetaDataFetcher(NULL)
+    , FMetaDataFetcher(NULL),
+    FMessageWidget(NULL),
+    FMultiUserChatPlugin(NULL)
 #endif
 {
 #ifdef Q_WS_X11
@@ -123,14 +125,29 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
         }
     }
 #ifdef Q_WS_X11
-    plugin = APluginManager()->pluginInterface("IMessageProcessor").value(0,NULL);
+    // player manage (/play, /pause etc command)
+    plugin = APluginManager->pluginInterface("IMessageProcessor").value(0,NULL);
     Q_ASSERT(plugin);
     if (plugin)
     {
-            IMessageProcessor *messageProcessor = qobject_cast<IMessageProcessor *>(plugin->instance());
-            Q_ASSERT(messageProcessor);
-            if (messageProcessor)
-                    messageProcessor->insertMessageEditor(MEO_USERTUNE, this);
+        IMessageProcessor *messageProcessor = qobject_cast<IMessageProcessor *>(plugin->instance());
+        Q_ASSERT(messageProcessor);
+        if (messageProcessor)
+            messageProcessor->insertMessageEditor(MEO_USERTUNE, this);
+    }
+
+    plugin = APluginManager->pluginInterface("IMessageWidgets").value(0,NULL);
+    Q_ASSERT(plugin);
+    if (plugin)
+    {
+        FMessageWidget = qobject_cast<IMessageWidgets *>(plugin->instance());
+    }
+
+    plugin = APluginManager->pluginInterface("IMultiUserChatPlugin").value(0,NULL);
+    Q_ASSERT(plugin);
+    if (plugin)
+    {
+        FMultiUserChatPlugin = qobject_cast<IMultiUserChatPlugin *>(plugin->instance());
     }
 #endif
     plugin = APluginManager->pluginInterface("INotifications").value(0,NULL);
@@ -278,35 +295,61 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 }
 
 #ifdef Q_WS_X11
+// for player manage
 bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection)
 {
     Q_UNUSED(AStreamJid);
     Q_ASSERT(FMetaDataFetcher);
 
-    if (FMetaDataFetcher && AOrder == MEO_MULTIUSERCHAT && ADirection == IMessageProcessor::MessageOut)
+    bool recognized = false;
+
+    if (FMetaDataFetcher && AOrder == MEO_USERTUNE && ADirection == IMessageProcessor::MessageOut)
     {
-        if (AMessage.body.contains(QLatin1String("/play"), Qt::CaseInsensitive) ||
-                AMessage.body.contains(QLatin1String("/pause"), Qt::CaseInsensitive))
+        QString body = AMessage.body();
+
+        if (body.startsWith(QLatin1String("/play"), Qt::CaseInsensitive) ||
+                body.startsWith(QLatin1String("/pause"), Qt::CaseInsensitive))
         {
             FMetaDataFetcher->playerPlay();
+            recognized = true;
         }
-        else if (AMessage.body.contains(QLatin1String("/stop"), Qt::CaseInsensitive))
+        else if (body.startsWith(QLatin1String("/stop"), Qt::CaseInsensitive))
         {
             FMetaDataFetcher->playerStop();
+            recognized = true;
         }
-        else if (AMessage.body.contains(QLatin1String("/next"), Qt::CaseInsensitive))
+        else if (body.startsWith(QLatin1String("/next"), Qt::CaseInsensitive))
         {
             FMetaDataFetcher->playerNext();
+            recognized = true;
         }
-        else if (AMessage.body.contains(QLatin1String("/prev"), Qt::CaseInsensitive))
+        else if (body.startsWith(QLatin1String("/prev"), Qt::CaseInsensitive))
         {
             FMetaDataFetcher->playerPrev();
+            recognized = true;
         }
 
-        return true;
+        if (recognized) {
+            IEditWidget *widget;
+
+            switch (AMessage.type()) {
+                case Message::Chat:
+                    widget = FMessageWidget->findChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
+                    break;
+                case Message::GroupChat:
+                    widget = FMultiUserChatPlugin->multiChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
+                    break;
+                default:
+                    widget = NULL;
+                    break;
+            }
+            Q_ASSERT(widget != NULL);
+            if (widget)
+                widget->clearEditor();
+        }
     }
 
-    return false;
+    return recognized;
 }
 #endif
 
@@ -675,7 +718,7 @@ void UserTuneHandler::unsetContactLabel(const Jid &AContactJid)
 QString UserTuneHandler::getTagFormat(const Jid &AContactJid) const
 {
     QString Tag = FFormatTag;
-// TODO переделать, все в один проход и не оставлять разделятелей
+// TODO переделать, все в один проход и не оставлять разделителей
     Tag.replace(QLatin1String("%A"), FContactTune.value(AContactJid).artist);
     Tag.replace(QLatin1String("%L"), secToTime(FContactTune.value(AContactJid).length));
     Tag.replace(QLatin1String("%R"), QString::number(FContactTune.value(AContactJid).rating)); // ★☆✮

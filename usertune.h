@@ -28,6 +28,8 @@
 #include <interfaces/ioptionsmanager.h>
 #ifdef Q_WS_X11
 #include <interfaces/imessageprocessor.h>
+#include <interfaces/imessagewidgets.h>
+#include <interfaces/imultiuserchat.h>
 #endif
 #include <interfaces/inotifications.h>
 #include <interfaces/iroster.h>
@@ -61,7 +63,11 @@ class UserTuneHandler :
 
 {
     Q_OBJECT
+#ifdef Q_WS_X11
+    Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler IMessageEditor)
+#else
     Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
+#endif
 public:
     explicit UserTuneHandler();
     ~UserTuneHandler();
@@ -116,7 +122,7 @@ protected:
     void unsetContactLabel();
     inline void unsetContactLabel(const Jid &AContactJid);
     QString getTagFormat(const Jid &AContactJid) const;
-    QString secToTime(unsigned short sec)
+    static const QString secToTime(unsigned short sec)
     {
         if (sec == 0)
         {
@@ -144,6 +150,8 @@ private:
     INotifications *FNotifications;
 #ifdef Q_WS_X11
     IMetaDataFetcher *FMetaDataFetcher;
+    IMessageWidgets *FMessageWidget;
+    IMultiUserChatPlugin *FMultiUserChatPlugin;
     UserTuneData FUserTuneData;
     QTimer FTimer;
 #endif

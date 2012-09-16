@@ -1,1 +1,1 @@
-#define SVN_REVISION "exported"
+#define SVN_REVISION "Unversioned directory"
