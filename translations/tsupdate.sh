@@ -10,3 +10,4 @@ fi
 lupdate="${lupdate} ${LOPTIONS}"
 
 find . -name '*.pro' -exec ${lupdate} {} \;
+
