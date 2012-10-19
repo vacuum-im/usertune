@@ -21,16 +21,16 @@ public:
     virtual QWidget* instance() { return this; }
 
 signals:
-    void modified();
-    void childApply();
-    void childReset();
+	void modified();
+	void childApply();
+	void childReset();
 
 public slots:
     virtual void apply();
     virtual void reset();
 
 private slots:
-    void onRefreshPlayer();
+    void onRefreshPlayers();
     void onVersionChange(int);
 
 private:

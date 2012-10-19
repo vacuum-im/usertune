@@ -79,7 +79,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not selected</source>
+        <source>Allow to send information about playing music</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

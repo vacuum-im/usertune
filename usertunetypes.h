@@ -4,7 +4,7 @@
 #include <QString>
 #include <QUrl>
 
-namespace FetchrVer {
+namespace FetcherVer {
     enum FetchersVer {
         fetcherNone = 0,
     #ifdef Q_WS_X11

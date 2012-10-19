@@ -79,8 +79,8 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <source>Not selected</source>
-        <translation>Not selected</translation>
+        <source>Allow to send information about playing music</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

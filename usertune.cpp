@@ -63,7 +63,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
     APluginInfo->name = tr("User Tune Handler");
     APluginInfo->description = tr("Allows hadle user tunes");
-    APluginInfo->version = "0.9.7";
+	APluginInfo->version = "0.9.8";
     APluginInfo->author = "Crying Angel";
     APluginInfo->homePage = "http://www.vacuum-im.org";
     APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -216,11 +216,12 @@ bool UserTuneHandler::initObjects()
 
 bool UserTuneHandler::initSettings()
 {
-    Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,false);
+	Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,true);
+	Options::setDefaultValue(OPV_UT_ALLOW_SEND_MUSIC_INFO,true);
     Options::setDefaultValue(OPV_UT_TAG_FORMAT,QLatin1String("%T - %A - %S"));
 #ifdef Q_WS_X11
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,QLatin1String("amarok"));
-    Options::setDefaultValue(OPV_UT_PLAYER_VER,FetchrVer::mprisV1);
+	Options::setDefaultValue(OPV_UT_PLAYER_VER,FetcherVer::mprisV1);
 #elif Q_WS_WIN
     // TODO: сделать для windows
     Options::setDefaultValue(OPV_UT_PLAYER_NAME,QLatin1String(""));
@@ -255,9 +256,10 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
 
 void UserTuneHandler::onOptionsOpened()
 {
-    onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
+	onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
     onOptionsChanged(Options::node(OPV_UT_TAG_FORMAT));
 #ifdef Q_WS_X11
+	onOptionsChanged(Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO));
     updateFetchers();
 #endif
 }
@@ -274,12 +276,19 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
         {
             unsetContactLabel();
         }
-    }
+	}
     else if (ANode.path() == OPV_UT_TAG_FORMAT)
     {
         FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
     }
 #ifdef Q_WS_X11
+	else if (ANode.path() == OPV_UT_ALLOW_SEND_MUSIC_INFO)
+	{
+		if (!Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).value().toBool())
+		{
+			onStopPublishing();
+		}
+	}
     else if (ANode.path() == OPV_UT_PLAYER_VER)
     {
         updateFetchers();
@@ -355,7 +364,7 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 
 void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &AContactJid)
 {
-    if (FNotifications && FNotifications->notifications().isEmpty() && FContactTune.contains(AContactJid))
+    if (FNotifications && FContactTune.contains(AContactJid))
     {
         INotification notify;
         notify.kinds = FNotifications->enabledTypeNotificationKinds(NNT_USERTUNE);
@@ -400,18 +409,15 @@ void UserTuneHandler::updateFetchers()
 
     switch (Options::node(OPV_UT_PLAYER_VER).value().toUInt()) {
 #ifdef Q_WS_X11
-    case FetchrVer::mprisV1:
+	case FetcherVer::mprisV1:
         FMetaDataFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
         break;
-    case FetchrVer::mprisV2:
+	case FetcherVer::mprisV2:
         FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
         break;
 #elif Q_WS_WIN
     // for Windows players...
 #endif
-    case FetchrVer::fetcherNone:
-        // disable send data, only recive
-        break;
     default:
         break;
     }
@@ -517,14 +523,17 @@ bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStan
 #ifdef Q_WS_X11
 void UserTuneHandler::onTrackChanged(UserTuneData data)
 {
-    if (FTimer.isActive())
+	if (FTimer.isActive())
     {
         FTimer.stop();
     }
 
     FUserTuneData = data;
 
-    FTimer.start();
+	if (Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).value().toBool())
+	{
+		FTimer.start();
+	}
 }
 
 void UserTuneHandler::onSendPep()

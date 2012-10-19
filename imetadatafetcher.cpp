@@ -13,14 +13,14 @@ QStringList getPlayersList(const int &ver)
     switch (ver)
     {
 #ifdef  Q_WS_X11
-    case FetchrVer::mprisV1:
+    case FetcherVer::mprisV1:
         foreach (QString service, services)
         {
             if (!service.startsWith("org.mpris.MediaPlayer2."))
                 ret_list << service.replace("org.mpris.","");
         }
         break;
-     case FetchrVer::mprisV2:
+     case FetcherVer::mprisV2:
         foreach (QString service, services)
         {
             if (service.startsWith("org.mpris.MediaPlayer2."))

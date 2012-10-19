@@ -79,8 +79,8 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - исполнитель&lt;br /&gt;%L - длина&lt;br /&gt;%R - рейтинг&lt;br /&gt;%S - альбом&lt;br /&gt;%T - название&lt;br /&gt;%N - номер песни&lt;br /&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <source>Not selected</source>
-        <translation>Не выбран</translation>
+        <source>Allow to send information about playing music</source>
+        <translation>Разрешить отпарвку информации о прослушиваемой музыке</translation>
     </message>
 </context>
 </TS>

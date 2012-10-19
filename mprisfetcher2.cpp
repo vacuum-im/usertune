@@ -40,9 +40,9 @@ void MprisFetcher2::connectToBus()
 {
     QDBusConnection::sessionBus().connect(
                 "org.mpris.MediaPlayer2." + FPlayerName,
-                "/org/mpris/MediaPlayer2",
-                "org.freedesktop.DBus.Properties",
-                "PropertiesChanged",
+                QLatin1String("/org/mpris/MediaPlayer2"),
+                QLatin1String("org.freedesktop.DBus.Properties"),
+                QLatin1String("PropertiesChanged"),
                 this,
                 SLOT(onPropertyChange(QDBusMessage)));
 }
@@ -50,9 +50,9 @@ void MprisFetcher2::connectToBus()
 void MprisFetcher2::disconnectToBus()
 {
     QDBusConnection::sessionBus().disconnect("org.mpris.MediaPlayer2." + FPlayerName,
-                                             "/org/mpris/MediaPlayer2",
-                                             "org.freedesktop.DBus.Properties",
-                                             "PropertiesChanged",
+                                             QLatin1String("/org/mpris/MediaPlayer2"),
+                                             QLatin1String("org.freedesktop.DBus.Properties"),
+                                             QLatin1String("PropertiesChanged"),
                                              this,
                                              SLOT(onTrackChange(QVariantMap)));
 }
