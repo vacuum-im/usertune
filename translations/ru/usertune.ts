@@ -80,7 +80,7 @@
     </message>
     <message>
         <source>Allow to send information about playing music</source>
-        <translation>Разрешить отпарвку информации о прослушиваемой музыке</translation>
+        <translation>Разрешить отправку информации о прослушиваемой музыке</translation>
     </message>
 </context>
 </TS>
