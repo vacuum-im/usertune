@@ -21,6 +21,7 @@ UserTuneOptions::UserTuneOptions(QWidget *AParent) :
 	connect(ui->btn_refreshPlayers, SIGNAL(clicked()),this, SLOT(onRefreshPlayers()));
 	connect(ui->le_format, SIGNAL(textChanged(QString)), SIGNAL(modified()));
 	connect(ui->chb_allowSendMusicInfo, SIGNAL(clicked()), SIGNAL(modified()));
+	connect(ui->chb_dontSendURI, SIGNAL(clicked()), SIGNAL(modified()));
 	connect(ui->chb_showIcon, SIGNAL(clicked()), SIGNAL(modified()));
 
 	reset();
@@ -57,6 +58,7 @@ void UserTuneOptions::apply()
 {
 	Options::node(OPV_UT_SHOW_ROSTER_LABEL).setValue(ui->chb_showIcon->isChecked());
 	Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).setValue(ui->chb_allowSendMusicInfo->isChecked());
+	Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO).setValue(ui->chb_dontSendURI->isChecked());
 	Options::node(OPV_UT_TAG_FORMAT).setValue(ui->le_format->text());
 
 	int index = ui->cb_mpris_version->currentIndex();
@@ -71,13 +73,16 @@ void UserTuneOptions::reset()
 {
 	ui->chb_showIcon->setChecked(Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool());
 	ui->chb_allowSendMusicInfo->setChecked(Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).value().toBool());
+	ui->chb_dontSendURI->setChecked(Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO).value().toBool());
 	ui->le_format->setText(Options::node(OPV_UT_TAG_FORMAT).value().toString());
 
-	int index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
-	ui->cb_playerName->setCurrentIndex(index != -1 ? index : 0);
-
-	index = ui->cb_mpris_version->findData(Options::node(OPV_UT_PLAYER_VER).value().toInt());
+	int index = ui->cb_mpris_version->findData(Options::node(OPV_UT_PLAYER_VER).value().toInt());
 	ui->cb_mpris_version->setCurrentIndex(index);
+
+	onRefreshPlayers();
+
+	index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+	ui->cb_playerName->setCurrentIndex(index != -1 ? index : 0);
 
 	emit childReset();
 }

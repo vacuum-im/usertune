@@ -82,5 +82,9 @@
         <source>Allow to send information about playing music</source>
         <translation>Разрешить отправку информации о прослушиваемой музыке</translation>
     </message>
+    <message>
+        <source>Never send a URL tag</source>
+        <translation>Никогда не отправлять URL-тег</translation>
+    </message>
 </context>
 </TS>

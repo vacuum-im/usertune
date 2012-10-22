@@ -3,7 +3,8 @@ HEADERS = usertune.h \
           mprisfetcher1.h \
           mprisfetcher2.h \
           usertunetypes.h \
-          usertuneoptions.h
+          usertuneoptions.h \
+          definitions.h
 
 SOURCES = usertune.cpp \
           imetadatafetcher.cpp \

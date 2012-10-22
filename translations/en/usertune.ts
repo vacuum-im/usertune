@@ -82,5 +82,9 @@
         <source>Allow to send information about playing music</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Never send a URL tag</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>

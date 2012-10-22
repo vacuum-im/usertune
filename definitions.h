@@ -19,6 +19,7 @@
 //Options
 #define OPV_UT_SHOW_ROSTER_LABEL            "usertune.show-roster-label"
 #define OPV_UT_ALLOW_SEND_MUSIC_INFO        "usertune.allow-send-music-info"
+#define OPV_UT_NOT_ALLOW_SEND_URL_INFO      "usertune.not-allow-send-url-info"
 #define OPV_UT_TAG_FORMAT			"usertune.tag-format"
 #define OPV_UT_PLAYER_NAME			"usertune.player-name"
 #define OPV_UT_PLAYER_VER			"usertune.player-ver"

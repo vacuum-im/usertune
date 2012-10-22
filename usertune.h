@@ -159,6 +159,8 @@ private:
     int FHandlerId;
     int FUserTuneLabelId;
 #ifdef Q_WS_X11
+	bool FAllowSendPEP;
+	bool FAllowSendURLInPEP;
     QString FFormatTag;
 #endif
 
