@@ -121,8 +121,7 @@ protected:
     inline void setContactLabel(const Jid &AContactJid);
     void unsetContactLabel();
     inline void unsetContactLabel(const Jid &AContactJid);
-    QString getTagFormat(const Jid &AContactJid) const;
-    static const QString secToTime(unsigned short sec)
+    static const QString secondToString(unsigned short sec)
     {
         if (sec == 0)
         {
@@ -150,7 +149,7 @@ private:
     INotifications *FNotifications;
 #ifdef Q_WS_X11
     IMetaDataFetcher *FMetaDataFetcher;
-    IMessageWidgets *FMessageWidget;
+    IMessageWidgets *FMessageWidgets;
     IMultiUserChatPlugin *FMultiUserChatPlugin;
     UserTuneData FUserTuneData;
     QTimer FTimer;
@@ -170,6 +169,8 @@ private:
 private:
 #ifdef Q_WS_X11
     void updateFetchers();
+    QString getTagFormated(const Jid &AContactJid) const;
+    QString getTagFormated(const UserTuneData &AUserData) const;
 #endif
 };
 
