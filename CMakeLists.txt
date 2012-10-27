@@ -4,8 +4,8 @@ project(usertune-plugin)
 set(PLUGIN_NAME usertune)
 
 set(SOURCES usertune.cpp imetadatafetcher.cpp mprisfetcher1.cpp mprisfetcher2.cpp usertuneoptions.cpp usertunetypes.cpp)
-set(HEADERS usertune.h imetadatafetcher.h mprisfetcher1.h mprisfetcher2.h usertuneoptions.h)
-set(MOC_HEADERS ${HEADERS} usertunetypes.h)
+set(HEADERS usertune.h imetadatafetcher.h mprisfetcher1.h mprisfetcher2.h usertuneoptions.h usertunetypes.h)
+set(MOC_HEADERS usertune.h imetadatafetcher.h mprisfetcher1.h mprisfetcher2.h usertuneoptions.h)
 set(UIS usertuneoptions.ui)
 
 set(QT_USE_QTDBUS ON)
