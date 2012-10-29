@@ -393,7 +393,8 @@ void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &ACont
 		{
 			notify.typeId = NNT_USERTUNE;
 			notify.data.insert(NDR_ICON,IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC));
-			notify.data.insert(NDR_POPUP_CAPTION,tr("User Tune Notification"));
+			notify.data.insert(NDR_TOOLTIP,tr("User Tune Notification"));
+			notify.data.insert(NDR_POPUP_CAPTION,tr("User Tune"));
 			notify.data.insert(NDR_POPUP_TITLE,FNotifications->contactName(AStreamJid, AContactJid));
 			notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(AContactJid));
 
@@ -630,8 +631,9 @@ void UserTuneHandler::onStopPublishing()
 		{
 			streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
 			FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
-			FContactTune.clear();
 		}
+
+		FContactTune.clear();
 	}
 }
 #endif
@@ -658,13 +660,16 @@ void UserTuneHandler::onUnsetMainLabel(IXmppStream *AXmppStream)
 
 void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData &ASong)
 {
-	UserTuneData data = FContactTune.value(AContactJid);
-	if (data != ASong)
+	if (FContactTune.value(AContactJid) != ASong)
 	{
 		if (!ASong.isEmpty())
+		{
 			FContactTune.insert(AContactJid,ASong);
+		}
 		else
+		{
 			FContactTune.remove(AContactJid);
+		}
 	}
 }
 
@@ -778,7 +783,7 @@ QString UserTuneHandler::getTagFormated(const UserTuneData &AUserData) const
 
 void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips)
 {
-	if (ALabelId==RLID_DISPLAY || ALabelId==FUserTuneLabelId)
+	if (ALabelId == RLID_DISPLAY || ALabelId == FUserTuneLabelId)
 	{
 		Jid contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
 		if (FContactTune.contains(contactJid))
