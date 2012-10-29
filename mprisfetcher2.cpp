@@ -39,7 +39,7 @@ MprisFetcher2::~MprisFetcher2()
 void MprisFetcher2::connectToBus()
 {
     QDBusConnection::sessionBus().connect(
-                "org.mpris.MediaPlayer2." + FPlayerName,
+                ORG_MPRIS_2 + FPlayerName,
                 QLatin1String("/org/mpris/MediaPlayer2"),
                 QLatin1String("org.freedesktop.DBus.Properties"),
                 QLatin1String("PropertiesChanged"),
@@ -49,7 +49,7 @@ void MprisFetcher2::connectToBus()
 
 void MprisFetcher2::disconnectToBus()
 {
-    QDBusConnection::sessionBus().disconnect("org.mpris.MediaPlayer2." + FPlayerName,
+    QDBusConnection::sessionBus().disconnect(ORG_MPRIS_2 + FPlayerName,
                                              QLatin1String("/org/mpris/MediaPlayer2"),
                                              QLatin1String("org.freedesktop.DBus.Properties"),
                                              QLatin1String("PropertiesChanged"),
@@ -121,9 +121,9 @@ void MprisFetcher2::onPlayerNameChange(const QString &AName)
         FPlayerInterface = NULL;
     }
 
-    FPlayerInterface = new QDBusInterface("org.mpris.MediaPlayer2." + FPlayerName, "/Player",
-                                  "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
-
+    FPlayerInterface = new QDBusInterface(ORG_MPRIS_2 + FPlayerName, "/Player",
+                                          "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
+    Q_ASSERT(FPlayerInterface && FPlayerInterface->isValid());
     if (FPlayerInterface->isValid()) {
         updateStatus();
         connectToBus();
@@ -136,53 +136,50 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
     const QVariantMap& map = qdbus_cast<QVariantMap>(arg);
 
     QVariant v = map.value("Metadata");
+    Q_ASSERT(v.isValid());
     if (v.isValid())
     {
         arg = v.value<QDBusArgument>();
-        FTrackInfo = qdbus_cast<QVariantMap>(arg);
+        QVariantMap trackInfo = qdbus_cast<QVariantMap>(arg);
         UserTuneData data;
 
-        if (FTrackInfo.contains("xesam:artist")) {
-            data.artist =  FTrackInfo["xesam:artist"].toString();
-        } else if (FTrackInfo.contains("xesam:composer")) {
-            data.artist =  FTrackInfo["xesam:composer"].toString();
+        if (trackInfo.contains("xesam:artist")) {
+            data.artist =  trackInfo["xesam:artist"].toString();
+        } else if (trackInfo.contains("xesam:composer")) {
+            data.artist =  trackInfo["xesam:composer"].toString();
         }
 
-        if (FTrackInfo.contains("mpris:length")) {
-            data.length = FTrackInfo["mpris:length"].toULongLong() / 1000000;
+        if (trackInfo.contains("mpris:length")) {
+            data.length = trackInfo["mpris:length"].toULongLong() / 1000000;
         }
 
-        if (FTrackInfo.contains("xesam:userRating")) {
-        // use rating from 1 to 10
-            data.rating = FTrackInfo["xesam:userRating"].toUInt() * 2;
-        } else if (FTrackInfo.contains("rating")) {
-            data.rating = FTrackInfo["rating"].toUInt() * 2;
+        if (trackInfo.contains("xesam:userRating")) {
+            // use rating from 1 to 10
+            data.rating = trackInfo["xesam:userRating"].toUInt() * 2;
+        } else if (trackInfo.contains("rating")) {
+            data.rating = trackInfo["rating"].toUInt() * 2;
         }
 
-        if (FTrackInfo.contains("xesam:album")) {
-            data.source =  FTrackInfo["xesam:album"].toString();
+        if (trackInfo.contains("xesam:album")) {
+            data.source =  trackInfo["xesam:album"].toString();
         }
 
-        if (FTrackInfo.contains("xesam:title")) {
-            data.title =  FTrackInfo["xesam:title"].toString();
+        if (trackInfo.contains("xesam:title")) {
+            data.title =  trackInfo["xesam:title"].toString();
         }
 
-        if (FTrackInfo.contains("xesam:trackNumber")) {
-            data.track = FTrackInfo["xesam:trackNumber"].toString();
+        if (trackInfo.contains("xesam:trackNumber")) {
+            data.track = trackInfo["xesam:trackNumber"].toString();
         }
 
-        if (FTrackInfo.contains("xesam:url")) {
-            data.uri = FTrackInfo["xesam:url"].toUrl();
+        if (trackInfo.contains("xesam:url")) {
+            data.uri = trackInfo["xesam:url"].toUrl();
         }
 
         if (data != FUserTuneData) {
             FUserTuneData = data;
             emit trackChanged(data);
         }
-#ifndef QT_NO_DEBUG
-    } else {
-        qWarning() << "invalid Metadata onPropertyChange(QDBusMessage)";
-#endif
     }
 
     v = map.value("PlaybackStatus");
@@ -191,44 +188,45 @@ void MprisFetcher2::onPropertyChange(QDBusMessage msg)
         QString sStatus = v.toString();
         PlayerStatus pStatus;
         if (sStatus == "Playing") {
-            pStatus.Play = PSPlaying;
+            pStatus.Play = PlayingStatus::Playing;
         } else if (sStatus == "Paused") {
-            pStatus.Play = PSPaused;
+            pStatus.Play = PlayingStatus::Paused;
         } else if (sStatus == "Stopped") {
-            pStatus.Play = PSStopped;
+            pStatus.Play = PlayingStatus::Stopped;
         }
 
         if (FStatus != pStatus) {
             FStatus = pStatus;
             emit statusChanged(FStatus);
         }
-#ifndef QT_NO_DEBUG
-    } else {
-        qWarning() << "invalid PlaybackStatus onPropertyChange(QDBusMessage)";
-#endif
     }
 }
 
 void MprisFetcher2::onPlayersExistenceChanged(QString name, QString /*empty*/, QString newOwner)
 {
-    if (!name.startsWith("org.mpris.MediaPlayer2.")) {
+    if (!name.startsWith(ORG_MPRIS_2)) {
         return;
     }
-    QString newPlayer = name.replace("org.mpris.MediaPlayer2.","");
+#if QT_VERSION >= 0x040800
+    QStringRef newPlayer = name.midRef(QString(ORG_MPRIS_2).length());
+#else
+    QString newPlayer = name.mid(QString(ORG_MPRIS_2).length());
+#endif
 
-    bool player_closed = newOwner.isEmpty();
-    if (!player_closed) {
-        if (FPlayerName == newPlayer) {
+    if (FPlayerName == newPlayer) {
+        // player not closed
+        if (!newOwner.isEmpty()) {
+#if QT_VERSION >= 0x040800
+            onPlayerNameChange(newPlayer.toString());
+#else
             onPlayerNameChange(newPlayer);
-        }
-    } else {
-        if (FPlayerName == newPlayer)
-        {
+#endif
+        } else {
             disconnectToBus();
             delete FPlayerInterface;
             FPlayerInterface = NULL;
 
-            FStatus.Play = PSStopped;
+            FStatus.Play = PlayingStatus::Stopped;
             emit statusChanged(FStatus);
         }
     }

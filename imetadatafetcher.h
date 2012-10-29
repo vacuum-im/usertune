@@ -6,6 +6,9 @@
 
 #include "usertunetypes.h"
 
+#define ORG_MPRIS_1 QLatin1String("org.mpris.")
+#define ORG_MPRIS_2 QLatin1String("org.mpris.MediaPlayer2.")
+
 QStringList getPlayersList(const int &ver);
 
 class IMetaDataFetcher : public QObject
@@ -14,7 +17,7 @@ class IMetaDataFetcher : public QObject
 public:
     explicit IMetaDataFetcher(QObject *parent);
     virtual ~IMetaDataFetcher();
-    QVariantMap getMetadata();
+
     PlayerStatus getPlayerStatus();
     QString getPlayerName() const { return FPlayerName; }
 
@@ -36,7 +39,6 @@ protected:
     QString FPlayerName;
     QDBusInterface *FPlayerInterface;
     PlayerStatus FStatus;
-    QVariantMap FTrackInfo;
 };
 
 Q_DECLARE_METATYPE(PlayerStatus)

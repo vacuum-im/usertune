@@ -63,7 +63,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = "0.9.9";
+	APluginInfo->version = "1.0.0";
 	APluginInfo->author = "Crying Angel";
 	APluginInfo->homePage = "http://www.vacuum-im.org";
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -73,7 +73,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 
 bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInitOrder)
 {
-	AInitOrder=500;
+	AInitOrder = 500;
 
 	IPlugin *plugin;
 
@@ -599,7 +599,7 @@ void UserTuneHandler::onSendPep()
 
 void UserTuneHandler::onPlayerSatusChanged(PlayerStatus status)
 {
-	if (status.Play == PSStopped)
+	if (status.Play == PlayingStatus::Stopped)
 	{
 		onStopPublishing();
 	}

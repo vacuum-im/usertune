@@ -42,12 +42,6 @@
 #endif
 #include "usertunetypes.h"
 
-#ifdef SVNINFO
-#  include "svninfo.h"
-#else
-#  define SVN_REVISION              "0"
-#endif
-
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 #define PEP_USERTUNE              4000
 

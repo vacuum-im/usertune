@@ -16,16 +16,18 @@ enum FetchersVer {
 };
 }
 
+namespace PlayingStatus {
 enum PlayingStatus
 {
-	PSPlaying = 0,
-	PSPaused,
-	PSStopped
+	Playing = 0,
+	Paused,
+	Stopped
 };
+}
 
 struct PlayerStatus
 {
-	PlayerStatus() : Play(PSStopped), PlayRandom(0), Repeat(0), RepeatPlaylist(0) {}
+	PlayerStatus() : Play(PlayingStatus::Stopped), PlayRandom(0), Repeat(0), RepeatPlaylist(0) {}
 	PlayerStatus(const PlayerStatus &);
 	bool operator ==(const PlayerStatus &) const;
 	bool operator !=(const PlayerStatus &) const;

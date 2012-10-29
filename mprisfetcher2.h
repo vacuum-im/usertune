@@ -9,8 +9,8 @@ class MprisFetcher2 : public IMetaDataFetcher
 public:
     MprisFetcher2(QObject *parent, const QString &APlayerName);
     ~MprisFetcher2();
-    QVariantMap getMetadata();
-    PlayerStatus getPlayerStatus();
+
+    PlayerStatus getPlayerStatus() const;
     QString getPlayerName() const;
 
 signals:
@@ -18,10 +18,10 @@ signals:
     void trackChanged(UserTuneData);
 
 public slots:
-    virtual void playerPlay();
-    virtual void playerStop();
-    virtual void playerPrev();
-    virtual void playerNext();
+	virtual void playerPlay();
+	virtual void playerStop();
+	virtual void playerPrev();
+	virtual void playerNext();
     virtual void onPlayerNameChange(const QString &);
 
 private slots:
