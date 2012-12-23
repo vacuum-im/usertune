@@ -184,7 +184,7 @@
  <connections>
   <connection>
    <sender>chb_allowSendMusicInfo</sender>
-   <signal>clicked(bool)</signal>
+   <signal>toggled(bool)</signal>
    <receiver>chb_dontSendURI</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
