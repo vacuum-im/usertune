@@ -103,7 +103,7 @@ protected slots:
     void onOptionsOpened();
     void onOptionsChanged(const OptionsNode &ANode);
     void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
-    void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
+    void onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int,QString> &AToolTips);
     void onShowNotification(const Jid &AStreamJid, const Jid &AContactJid);
     void onNotificationActivated(int ANotifyId);
     void onNotificationRemoved(int ANotifyId);
@@ -150,7 +150,7 @@ private:
 #endif
 
     int FHandlerId;
-    int FUserTuneLabelId;
+    quint32 FUserTuneLabelId;
 #ifdef Q_WS_X11
 	bool FAllowSendPEP;
 	bool FAllowSendURLInPEP;

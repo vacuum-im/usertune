@@ -7,11 +7,12 @@
 #include <definitions/notificationtypeorders.h>
 #include <definitions/menuicons.h>
 #include <definitions/resources.h>
-#include <definitions/rosterlabelorders.h>
 #include <definitions/rostertooltiporders.h>
 #include <definitions/rosterindextyperole.h>
 
 #include <definitions/optionvalues.h>
+
+#include <utils/advanceditemdelegate.h>
 
 #include "usertune.h"
 #include "mprisfetcher1.h"
@@ -63,7 +64,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = "1.0.0";
+	APluginInfo->version = "1.0.1";
 	APluginInfo->author = "Crying Angel";
 	APluginInfo->homePage = "http://www.vacuum-im.org";
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -205,10 +206,10 @@ bool UserTuneHandler::initObjects()
 
 	if (FRostersViewPlugin)
 	{
-		IRostersLabel label;
-		label.order = RLO_USERTUNE;
-		label.value = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
-		FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(label);
+		AdvancedDelegateItem notifyLabel(RLID_USERTUNE);
+		notifyLabel.d->kind = AdvancedDelegateItem::CustomData;
+		notifyLabel.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
+		FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(notifyLabel);
 	}
 
 	return true;
@@ -781,15 +782,14 @@ QString UserTuneHandler::getTagFormated(const UserTuneData &AUserData) const
 	return tagsLine;
 }
 
-void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips)
+void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int, QString> &AToolTips)
 {
-	if (ALabelId == RLID_DISPLAY || ALabelId == FUserTuneLabelId)
+	if (ALabelId == FUserTuneLabelId)
 	{
 		Jid contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
 		if (FContactTune.contains(contactJid))
 		{
-			QString formatedString = getTagFormated(contactJid).replace(QChar('\n'),
-																		QLatin1String("<br />"));
+			QString formatedString = getTagFormated(contactJid).replace(QLatin1String("\n"), QLatin1String("<br />"));
 			QString toolTip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:"))
 					.arg(Qt::escape(formatedString));
 
