@@ -28,10 +28,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>User Tune Notification</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Listen:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -45,6 +41,14 @@
     </message>
     <message>
         <source>Player name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>listening to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Music info</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

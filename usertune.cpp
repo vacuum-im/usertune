@@ -2,26 +2,27 @@
 #  include <QDebug>
 #endif
 
-#include <definitions/notificationtypes.h>
+#include <QClipboard>
+#include <QApplication>
+
+#include <definitions/menuicons.h>
 #include <definitions/notificationdataroles.h>
 #include <definitions/notificationtypeorders.h>
-#include <definitions/menuicons.h>
-#include <definitions/resources.h>
-#include <definitions/rostertooltiporders.h>
-#include <definitions/rosterindextyperole.h>
-
+#include <definitions/notificationtypes.h>
 #include <definitions/optionvalues.h>
-
+#include <definitions/resources.h>
+#include <definitions/rosterdataholderorders.h>
+#include <definitions/rosterindextyperole.h>
+#include <definitions/rostertooltiporders.h>
 #include <utils/advanceditemdelegate.h>
 
+#include "definitions.h"
 #include "usertune.h"
 #include "mprisfetcher1.h"
 #include "mprisfetcher2.h"
 #ifdef Q_WS_X11
 #include "usertuneoptions.h"
 #endif
-
-#include "definitions.h"
 
 #ifdef Q_WS_X11
 #define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
@@ -33,18 +34,25 @@
 	}
 #endif
 
+#define RDR_USERTUNE 450
+#define ADR_CLIPBOARD_DATA Action::DR_Parametr2
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
 #define PEP_SEND_DELAY 5*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
 
 UserTuneHandler::UserTuneHandler() :
+	FNotifications(NULL),
+	FOptionsManager(NULL),
 	FPEPManager(NULL),
+	FRoster(NULL),
+	FRosterPlugin(NULL),
+	FRostersModel(NULL),
+	FRostersViewPlugin(NULL),
 	FServiceDiscovery(NULL),
-	FXmppStreams(NULL),
-	FOptionsManager(NULL)
+	FXmppStreams(NULL)
   #ifdef Q_WS_X11
-  , FMetaDataFetcher(NULL),
-	FMessageWidgets(NULL),
+	,FMessageWidgets(NULL),
+	FMetaDataFetcher(NULL),
 	FMultiUserChatPlugin(NULL)
   #endif
 {
@@ -100,6 +108,23 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		connect(FXmppStreams->xmppStreams().at(i)->instance(), SIGNAL(aboutToClose()), this, SLOT(onStopPublishing()));
 	}
 
+	plugin = APluginManager->pluginInterface("IPresencePlugin").value(0, NULL);
+	if(plugin)
+	{
+		FPresencePlugin = qobject_cast<IPresencePlugin *>(plugin->instance());
+		if(FPresencePlugin)
+		{
+			connect(FPresencePlugin->instance(),SIGNAL(contactStateChanged(const Jid &, const Jid &, bool)),
+					SLOT(onContactStateChanged(const Jid &, const Jid &, bool)));
+		}
+	}
+
+	plugin = APluginManager->pluginInterface("IRoster").value(0, NULL);
+	if(plugin)
+	{
+		FRoster = qobject_cast<IRoster *>(plugin->instance());
+	}
+
 	plugin = APluginManager->pluginInterface("IRosterPlugin").value(0,NULL);
 	Q_ASSERT(plugin);
 	if (plugin)
@@ -121,8 +146,10 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		FRostersViewPlugin = qobject_cast<IRostersViewPlugin *>(plugin->instance());
 		if (FRostersViewPlugin)
 		{
-			connect(FRostersViewPlugin->rostersView()->instance(),SIGNAL(indexToolTips(IRosterIndex *, int, QMultiMap<int,QString> &)),
-					SLOT(onRosterIndexToolTips(IRosterIndex *, int, QMultiMap<int,QString> &)));
+			connect(FRostersViewPlugin->rostersView()->instance(),SIGNAL(indexClipboardMenu(const QList<IRosterIndex *> &, quint32, Menu *)),
+				SLOT(onRosterIndexClipboardMenu(const QList<IRosterIndex *> &, quint32, Menu *)));
+			connect(FRostersViewPlugin->rostersView()->instance(),SIGNAL(indexToolTips(IRosterIndex *, quint32, QMap<int,QString> &)),
+				SLOT(onRosterIndexToolTips(IRosterIndex *, quint32, QMap<int,QString> &)));
 		}
 	}
 #ifdef Q_WS_X11
@@ -204,12 +231,19 @@ bool UserTuneHandler::initObjects()
 		FNotifications->registerNotificationType(NNT_USERTUNE,notifyType);
 	}
 
+	if(FRostersModel)
+	{
+		FRostersModel->insertDefaultDataHolder(this);
+	}
+
 	if (FRostersViewPlugin)
 	{
-		AdvancedDelegateItem notifyLabel(RLID_USERTUNE);
-		notifyLabel.d->kind = AdvancedDelegateItem::CustomData;
-		notifyLabel.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
-		FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(notifyLabel);
+		AdvancedDelegateItem label(RLID_USERTUNE);
+		label.d->kind = AdvancedDelegateItem::CustomData;
+		label.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
+		FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(label);
+
+		FRostersViewPlugin->rostersView()->insertLabelHolder(RLHO_USERTUNE,this);
 	}
 
 	return true;
@@ -271,14 +305,8 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
 	if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
 	{
-		if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
-		{
-			setContactLabel();
-		}
-		else
-		{
-			unsetContactLabel();
-		}
+		FTuneLabelVisible = ANode.value().toBool();
+		emit rosterLabelChanged(FUserTuneLabelId,NULL);
 	}
 	else if (ANode.path() == OPV_UT_TAG_FORMAT)
 	{
@@ -308,6 +336,57 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 		}
 	}
 #endif
+}
+
+int UserTuneHandler::rosterDataOrder() const
+{
+	return RDHO_DEFAULT;
+}
+
+QList<int> UserTuneHandler::rosterDataRoles() const
+{
+	static const QList<int> indexRoles = QList<int>() << RDR_USERTUNE;
+	return indexRoles;
+}
+
+QList<int> UserTuneHandler::rosterDataTypes() const
+{
+	static const QList<int> indexTypes = QList<int>() << RIT_STREAM_ROOT << RIT_CONTACT;
+	return indexTypes;
+}
+
+QVariant UserTuneHandler::rosterData(const IRosterIndex *AIndex, int ARole) const
+{
+	if(ARole == RDR_USERTUNE)
+	{
+		Jid streamJid = AIndex->data(RDR_STREAM_JID).toString();
+		Jid senderJid = AIndex->data(RDR_PREP_BARE_JID).toString();
+		if (FContactTune[streamJid].contains(senderJid.pBare()))
+			return getTagFormated(streamJid, senderJid);
+	}
+	return QVariant();
+}
+
+bool UserTuneHandler::setRosterData(IRosterIndex *AIndex, int ARole, const QVariant &AValue)
+{
+	Q_UNUSED(AIndex);
+	Q_UNUSED(ARole);
+	Q_UNUSED(AValue);
+	return false;
+}
+
+QList<quint32> UserTuneHandler::rosterLabels(int AOrder, const IRosterIndex *AIndex) const
+{
+	QList<quint32> labels;
+	if (AOrder==RLHO_USERTUNE && FTuneLabelVisible && !AIndex->data(RDR_USERTUNE).isNull())
+		labels.append(FUserTuneLabelId);
+	return labels;
+}
+
+AdvancedDelegateItem UserTuneHandler::rosterLabel(int AOrder, quint32 ALabelId, const IRosterIndex *AIndex) const
+{
+	Q_UNUSED(AOrder); Q_UNUSED(AIndex);
+	return FRostersViewPlugin->rostersView()->registeredLabel(ALabelId);
 }
 
 #ifdef Q_WS_X11
@@ -384,9 +463,9 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 }
 #endif
 
-void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &AContactJid)
+void UserTuneHandler::onShowNotification(const Jid &streamJid, const Jid &senderJid)
 {
-	if (FNotifications && FContactTune.contains(AContactJid))
+	if (FNotifications && FContactTune[streamJid].contains(senderJid.pBare()) && streamJid.pBare() != senderJid.pBare())
 	{
 		INotification notify;
 		notify.kinds = FNotifications->enabledTypeNotificationKinds(NNT_USERTUNE);
@@ -394,14 +473,16 @@ void UserTuneHandler::onShowNotification(const Jid &AStreamJid, const Jid &ACont
 		{
 			notify.typeId = NNT_USERTUNE;
 			notify.data.insert(NDR_ICON,IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC));
-			notify.data.insert(NDR_TOOLTIP,tr("User Tune Notification"));
+			notify.data.insert(NDR_STREAM_JID,streamJid.full());
+			notify.data.insert(NDR_CONTACT_JID,senderJid.full());
+			notify.data.insert(NDR_TOOLTIP,QString("%1 %2").arg(FNotifications->contactName(streamJid, senderJid)).arg(tr("listening to")));
 			notify.data.insert(NDR_POPUP_CAPTION,tr("User Tune"));
-			notify.data.insert(NDR_POPUP_TITLE,FNotifications->contactName(AStreamJid, AContactJid));
-			notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(AContactJid));
+			notify.data.insert(NDR_POPUP_TITLE,FNotifications->contactName(streamJid, senderJid));
+			notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(senderJid));
 
-			notify.data.insert(NDR_POPUP_HTML,Qt::escape(getTagFormated(AContactJid)));
+			notify.data.insert(NDR_POPUP_HTML,Qt::escape(getTagFormated(streamJid, senderJid)));
 
-			FNotifies.insert(FNotifications->appendNotification(notify),AContactJid);
+			FNotifies.insert(FNotifications->appendNotification(notify),senderJid);
 		}
 	}
 }
@@ -421,6 +502,31 @@ void UserTuneHandler::onNotificationRemoved(int ANotifyId)
 		FNotifies.remove(ANotifyId);
 	}
 }
+
+void UserTuneHandler::onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AIndexes, quint32 ALabelId, Menu *AMenu)
+{
+	QList<int> indexTypes = QList<int>() << RIT_CONTACT << RIT_STREAM_ROOT;
+	if (ALabelId==AdvancedDelegateItem::DisplayId && AIndexes.count()==1 && indexTypes.contains(AIndexes.first()->type()))
+	{
+		QString song = getTagFormated(AIndexes.first()->data(RDR_STREAM_JID).toString(), AIndexes.first()->data(RDR_PREP_BARE_JID).toString());
+		if (!song.isEmpty())
+		{
+			Action *action = new Action(AMenu);
+			action->setText(tr("Music info"));
+			action->setData(ADR_CLIPBOARD_DATA, song);
+			connect(action,SIGNAL(triggered(bool)),SLOT(onCopyToClipboardActionTriggered(bool)));
+			AMenu->addAction(action, AG_DEFAULT, true);
+		}
+	}
+}
+
+void UserTuneHandler::onCopyToClipboardActionTriggered(bool)
+{
+	Action *action = qobject_cast<Action *>(sender());
+	if (action)
+		QApplication::clipboard()->setText(action->data(ADR_CLIPBOARD_DATA).toString());
+}
+
 #ifdef Q_WS_X11
 void UserTuneHandler::updateFetchers()
 {
@@ -456,89 +562,59 @@ void UserTuneHandler::updateFetchers()
 	}
 }
 #endif
-bool UserTuneHandler::processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza)
+bool UserTuneHandler::processPEPEvent(const Jid &streamJid, const Stanza &AStanza)
 {
-	Q_UNUSED(AStreamJid)
-	Jid senderJid;
-	UserTuneData userSong;
-
 	QDomElement replyElem = AStanza.document().firstChildElement(QLatin1String("message"));
-
 	if (!replyElem.isNull())
 	{
-		senderJid = replyElem.attribute("from");
+		UserTuneData userSong;
+		Jid senderJid = replyElem.attribute("from");
 		QDomElement eventElem = replyElem.firstChildElement(QLatin1String("event"));
-
 		if (!eventElem.isNull())
 		{
 			QDomElement itemsElem = eventElem.firstChildElement(QLatin1String("items"));
-
 			if (!itemsElem.isNull())
 			{
 				QDomElement itemElem = itemsElem.firstChildElement(QLatin1String("item"));
-
 				if (!itemElem.isNull())
 				{
 					QDomElement tuneElem = itemElem.firstChildElement(QLatin1String("tune"));
-
 					if (!tuneElem.isNull() && !tuneElem.firstChildElement().isNull())
 					{
 						QDomElement elem;
 						elem = tuneElem.firstChildElement(QLatin1String("artist"));
 						if (!elem.isNull())
-						{
 							userSong.artist = elem.text();
-						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("length"));
 						if (!elem.isNull())
-						{
 							userSong.length = elem.text().toUInt();
-						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("rating"));
 						if (!elem.isNull())
-						{
 							userSong.rating = elem.text().toUInt();
-						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("source"));
 						if (!elem.isNull())
-						{
 							userSong.source = elem.text();
-						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("title"));
 						if (!elem.isNull())
-						{
 							userSong.title = elem.text();
-						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("track"));
 						if (!elem.isNull())
-						{
 							userSong.track = elem.text();
-						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("uri"));
 						if (!elem.isNull())
-						{
 							userSong.uri = elem.text();
-						}
-
-						setContactLabel(senderJid);
-						onShowNotification(AStreamJid, senderJid);
-					}
-					else // !tuneElem.isNull() && !tuneElem.firstChildElement().isNull()
-					{
-						unsetContactLabel(senderJid);
 					}
 				}
 			}
 		}
+		setContactTune(streamJid, senderJid, userSong);
 	}
-
-	setContactTune(senderJid, userSong);
 
 	return true;
 }
@@ -643,123 +719,74 @@ void UserTuneHandler::onStopPublishing()
 */
 void UserTuneHandler::onSetMainLabel(IXmppStream *AXmppStream)
 {
-	IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
-	if (index!=NULL)
+	if (FRostersViewPlugin)
 	{
-		FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, index);
+		IRostersModel *model = FRostersViewPlugin->rostersView()->rostersModel();
+		IRosterIndex *index = model!=NULL ? model->streamRoot(AXmppStream->streamJid()) : NULL;
+		if (index!=NULL)
+			FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, index);
 	}
 }
 
 void UserTuneHandler::onUnsetMainLabel(IXmppStream *AXmppStream)
 {
-	IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
-	if (index!=NULL)
+	Jid streamJid = AXmppStream->streamJid();
+	FContactTune.remove(streamJid);
+	if(FRostersViewPlugin && FRostersModel)
 	{
-		FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId, index);
+		IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
+		if (index!=NULL)
+			FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId, index);
 	}
 }
 
-void UserTuneHandler::setContactTune(const Jid &AContactJid, const UserTuneData &ASong)
+void UserTuneHandler::onContactStateChanged(const Jid &streamJid, const Jid &senderJid, bool AStateOnline)
 {
-	if (FContactTune.value(AContactJid) != ASong)
-	{
-		if (!ASong.isEmpty())
-		{
-			FContactTune.insert(AContactJid,ASong);
-		}
-		else
-		{
-			FContactTune.remove(AContactJid);
-		}
-	}
+	if (!AStateOnline)
+		if (FContactTune[streamJid].contains(senderJid.pBare()))
+			FContactTune[streamJid].remove(senderJid.pBare());
 }
 
-/*
-	set music icon to contact
-*/
-void UserTuneHandler::setContactLabel()
+void UserTuneHandler::setContactTune(const Jid &streamJid, const Jid &senderJid, const UserTuneData &song)
 {
-	if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+	if (FContactTune[streamJid].value(senderJid.pBare()) != song)
 	{
-		foreach (const Jid &contactJid, FContactTune.keys())
+		IRoster *roster = FRosterPlugin!=NULL ? FRosterPlugin->findRoster(streamJid) : NULL;
+		if((roster!=NULL && roster->rosterItem(senderJid).isValid) || streamJid.pBare() == senderJid.pBare())
 		{
-			QMultiMap<int, QVariant> findData;
-			findData.insert(RDR_TYPE,RIT_CONTACT);
-			findData.insert(RDR_PREP_BARE_JID,contactJid.pBare());
-
-			foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
+			if (!song.isEmpty())
 			{
-				if (contactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
-				{
-					FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
-				}
-				else
-				{
-					FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
-				}
-			}
-		}
-	}
-}
-
-void UserTuneHandler::setContactLabel(const Jid &AContactJid)
-{
-	if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
-	{
-		QMultiMap<int, QVariant> findData;
-		findData.insert(RDR_TYPE,RIT_CONTACT);
-		findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
-
-		foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
-		{
-			if (AContactJid.pBare() == index->data(RDR_PREP_BARE_JID).toString())
-			{
-				FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+				FContactTune[streamJid].insert(senderJid.pBare(),song);
+				onShowNotification(streamJid, senderJid);
 			}
 			else
 			{
-				FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+				FContactTune[streamJid].remove(senderJid.pBare());
 			}
 		}
 	}
+	updateDataHolder(senderJid);
 }
-
-void UserTuneHandler::unsetContactLabel()
+void UserTuneHandler::updateDataHolder(const Jid &senderJid)
 {
-	if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
+	if(FRostersModel)
 	{
-		foreach (const Jid &AContactJid, FContactTune.keys())
+		QMultiMap<int,QVariant> findData;
+		foreach(int type, rosterDataTypes())
+			findData.insert(RDR_TYPE,type);
+		if (!senderJid.isEmpty())
+			findData.insert(RDR_PREP_BARE_JID,senderJid.pBare());
+		QList<IRosterIndex *> indexes = FRostersModel->rootIndex()->findChilds(findData,true);
+		foreach (IRosterIndex *index, indexes)
 		{
-			QMultiMap<int, QVariant> findData;
-			findData.insert(RDR_TYPE,RIT_CONTACT);
-			findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
-
-			foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
-			{
-				FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
-			}
+			emit rosterDataChanged(index,RDR_USERTUNE);
 		}
 	}
 }
 
-void UserTuneHandler::unsetContactLabel(const Jid &AContactJid)
+QString UserTuneHandler::getTagFormated(const Jid &streamJid, const Jid &senderJid) const
 {
-	if (Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool())
-	{
-		QMultiMap<int, QVariant> findData;
-		findData.insert(RDR_TYPE,RIT_CONTACT);
-		findData.insert(RDR_PREP_BARE_JID,AContactJid.pBare());
-
-		foreach (IRosterIndex *index, FRostersModel->rootIndex()->findChilds(findData,true))
-		{
-			FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
-		}
-	}
-}
-
-QString UserTuneHandler::getTagFormated(const Jid &AContactJid) const
-{
-	return getTagFormated(FContactTune.value(AContactJid, UserTuneData()));
+	return getTagFormated(FContactTune[streamJid].value(senderJid.pBare(), UserTuneData()));
 }
 
 QString UserTuneHandler::getTagFormated(const UserTuneData &AUserData) const
@@ -772,7 +799,7 @@ QString UserTuneHandler::getTagFormated(const UserTuneData &AUserData) const
 	QString tagsLine = FFormatTag;
 	// TODO: переделать, все в один проход и не оставлять разделителей
 	tagsLine.replace(QLatin1String("%A"), AUserData.artist);
-	tagsLine.replace(QLatin1String("%L"), secondToString(AUserData.length));
+	tagsLine.replace(QLatin1String("%L"), secondsToString(AUserData.length));
 	tagsLine.replace(QLatin1String("%R"), QString::number(AUserData.rating)); // ★☆✮
 	tagsLine.replace(QLatin1String("%S"), AUserData.source);
 	tagsLine.replace(QLatin1String("%T"), AUserData.title);
@@ -784,15 +811,14 @@ QString UserTuneHandler::getTagFormated(const UserTuneData &AUserData) const
 
 void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int, QString> &AToolTips)
 {
-	if (ALabelId == FUserTuneLabelId)
+	if (ALabelId==AdvancedDelegateItem::DisplayId || ALabelId==FUserTuneLabelId)
 	{
-		Jid contactJid = AIndex->data(RDR_PREP_BARE_JID).toString();
-		if (FContactTune.contains(contactJid))
+		Jid streamJid = AIndex->data(RDR_FULL_JID).toString();
+		Jid senderJid = AIndex->data(RDR_PREP_BARE_JID).toString();
+		if (FContactTune[streamJid].contains(senderJid.pBare()))
 		{
-			QString formatedString = getTagFormated(contactJid).replace(QLatin1String("\n"), QLatin1String("<br />"));
-			QString toolTip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:"))
-					.arg(Qt::escape(formatedString));
-
+			QString formatedString = getTagFormated(streamJid, senderJid).replace(QLatin1String("\n"), QLatin1String("<br />"));
+			QString toolTip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(Qt::escape(formatedString));
 			AToolTips.insert(RTTO_USERTUNE, toolTip);
 		}
 	}

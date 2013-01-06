@@ -28,10 +28,6 @@
         <translation>User Tune</translation>
     </message>
     <message>
-        <source>User Tune Notification</source>
-        <translation>Уведомление User Tune</translation>
-    </message>
-    <message>
         <source>Listen:</source>
         <translation>Слушает:</translation>
     </message>
@@ -46,6 +42,14 @@
     <message>
         <source>Player name:</source>
         <translation>Название плеера:</translation>
+    </message>
+    <message>
+        <source>listening to</source>
+        <translation>слушает</translation>
+    </message>
+    <message>
+        <source>Music info</source>
+        <translation>Информацию о музыке</translation>
     </message>
 </context>
 <context>

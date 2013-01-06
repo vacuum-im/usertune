@@ -154,7 +154,7 @@ void MprisFetcher1::updateStatus()
 {
 
     QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
-    Q_ASSERT(status.isValid());
+	//Q_ASSERT(status.isValid());
     if (status.isValid()) {
         onPlayerStatusChange(status.value());
 

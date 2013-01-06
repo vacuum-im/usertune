@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" sourcelanguage="en">
+<TS version="2.0" language="ru_RU" sourcelanguage="en">
 <context>
     <name>UserTuneHandler</name>
     <message>
@@ -40,12 +40,16 @@
         <translation>Player name:</translation>
     </message>
     <message>
-        <source>User Tune Notification</source>
-        <translation>User Tune Notification</translation>
-    </message>
-    <message>
         <source>Listen:</source>
         <translation>Listen:</translation>
+    </message>
+    <message>
+        <source>listening to</source>
+        <translation>listening to</translation>
+    </message>
+    <message>
+        <source>Music info</source>
+        <translation>Music info</translation>
     </message>
 </context>
 <context>
@@ -80,11 +84,11 @@
     </message>
     <message>
         <source>Allow to send information about playing music</source>
-        <translation type="unfinished"></translation>
+        <translation>Allow to send information about playing music</translation>
     </message>
     <message>
         <source>Never send a URL tag</source>
-        <translation type="unfinished"></translation>
+        <translation>Never send a URL tag</translation>
     </message>
 </context>
 </TS>

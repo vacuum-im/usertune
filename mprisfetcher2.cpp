@@ -132,11 +132,12 @@ void MprisFetcher2::onPlayerNameChange(const QString &AName)
 
 void MprisFetcher2::onPropertyChange(QDBusMessage msg)
 {
-    QDBusArgument arg = msg.arguments().at(1).value<QDBusArgument>();
+	qDebug() << msg;
+	QDBusArgument arg = msg.arguments().at(0).value<QDBusArgument>();
     const QVariantMap& map = qdbus_cast<QVariantMap>(arg);
 
     QVariant v = map.value("Metadata");
-    Q_ASSERT(v.isValid());
+	//Q_ASSERT(v.isValid());
     if (v.isValid())
     {
         arg = v.value<QDBusArgument>();

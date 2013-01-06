@@ -13,8 +13,8 @@
   <property name="windowTitle">
    <string>User Tune</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0" colspan="2">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
     <widget class="QCheckBox" name="chb_showIcon">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -30,7 +30,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item>
     <widget class="QCheckBox" name="chb_allowSendMusicInfo">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -46,7 +46,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0" colspan="2">
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">
@@ -85,74 +85,103 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="l_tags">
-     <property name="text">
-      <string>Show format:</string>
-     </property>
-     <property name="buddy">
-      <cstring>le_format</cstring>
-     </property>
-    </widget>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="l_tags">
+       <property name="text">
+        <string>Show format:</string>
+       </property>
+       <property name="buddy">
+        <cstring>le_format</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="le_format">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
-   <item row="3" column="1">
-    <widget class="QLineEdit" name="le_format">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="l_playerName">
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Player name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>cb_playerName</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_playerName">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_refreshPlayers">
+       <property name="text">
+        <string>Refresh</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="l_playerName">
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Player name:</string>
-     </property>
-     <property name="buddy">
-      <cstring>cb_playerName</cstring>
-     </property>
-    </widget>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="l_mpris_version">
+       <property name="text">
+        <string>MPRIS Version:</string>
+       </property>
+       <property name="buddy">
+        <cstring>cb_mpris_version</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_mpris_version">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
-   <item row="4" column="1">
-    <widget class="QComboBox" name="cb_playerName"/>
-   </item>
-   <item row="4" column="2">
-    <widget class="QPushButton" name="btn_refreshPlayers">
-     <property name="text">
-      <string>Refresh</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="l_mpris_version">
-     <property name="text">
-      <string>MPRIS Version:</string>
-     </property>
-     <property name="buddy">
-      <cstring>cb_mpris_version</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="QComboBox" name="cb_mpris_version"/>
-   </item>
-   <item row="6" column="1">
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Expanding</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>210</height>
+       <height>40</height>
       </size>
      </property>
     </spacer>
@@ -165,11 +194,13 @@
   <zorder>le_format</zorder>
   <zorder>cb_mpris_version</zorder>
   <zorder>l_mpris_version</zorder>
-  <zorder>verticalSpacer</zorder>
   <zorder>chb_showIcon</zorder>
   <zorder>chb_allowSendMusicInfo</zorder>
  </widget>
  <tabstops>
+  <tabstop>chb_showIcon</tabstop>
+  <tabstop>chb_allowSendMusicInfo</tabstop>
+  <tabstop>chb_dontSendURI</tabstop>
   <tabstop>le_format</tabstop>
   <tabstop>cb_playerName</tabstop>
   <tabstop>btn_refreshPlayers</tabstop>
