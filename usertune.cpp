@@ -16,13 +16,14 @@
 #include <definitions/rostertooltiporders.h>
 #include <utils/advanceditemdelegate.h>
 
-#include "definitions.h"
 #include "usertune.h"
 #include "mprisfetcher1.h"
 #include "mprisfetcher2.h"
 #ifdef Q_WS_X11
 #include "usertuneoptions.h"
 #endif
+
+#include "definitions.h"
 
 #ifdef Q_WS_X11
 #define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
@@ -622,8 +623,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &streamJid, const Stanza &AStanz
 #ifdef Q_WS_X11
 void UserTuneHandler::onTrackChanged(UserTuneData data)
 {
-	if (FTimer.isActive())
-	{
+	if (FTimer.isActive()) {
 		FTimer.stop();
 	}
 
@@ -646,18 +646,16 @@ void UserTuneHandler::onSendPep()
 
 	ADD_CHILD_ELEMENT (doc, tune, QLatin1String("artist"), FUserTuneData.artist)
 
-			if (FUserTuneData.length > 0)
-	{
+	if (FUserTuneData.length > 0) {
 		ADD_CHILD_ELEMENT (doc, tune, QLatin1String("length"), QString::number(FUserTuneData.length))
 	}
 
 	ADD_CHILD_ELEMENT (doc, tune, QLatin1String("rating"), QString::number(FUserTuneData.rating))
-			ADD_CHILD_ELEMENT (doc, tune, QLatin1String("source"), FUserTuneData.source)
-			ADD_CHILD_ELEMENT (doc, tune, QLatin1String("title"), FUserTuneData.title)
-			ADD_CHILD_ELEMENT (doc, tune, QLatin1String("track"), FUserTuneData.track)
+	ADD_CHILD_ELEMENT (doc, tune, QLatin1String("source"), FUserTuneData.source)
+	ADD_CHILD_ELEMENT (doc, tune, QLatin1String("title"), FUserTuneData.title)
+	ADD_CHILD_ELEMENT (doc, tune, QLatin1String("track"), FUserTuneData.track)
 
-	if (FAllowSendURLInPEP)
-	{
+	if (FAllowSendURLInPEP) {
 		ADD_CHILD_ELEMENT (doc, tune, QLatin1String("uri"), FUserTuneData.uri.toString())
 	}
 
@@ -684,6 +682,10 @@ void UserTuneHandler::onPlayerSatusChanged(PlayerStatus status)
 
 void UserTuneHandler::onStopPublishing()
 {
+	if (FTimer.isActive()) {
+		FTimer.stop();
+	}
+
 	QDomDocument doc(QLatin1String(""));
 	QDomElement root = doc.createElement(QLatin1String("item"));
 	doc.appendChild(root);
