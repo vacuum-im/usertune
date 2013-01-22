@@ -34,6 +34,7 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QStri
 MprisFetcher2::~MprisFetcher2()
 {
     disconnectToBus();
+	delete FPlayerInterface;
 }
 
 void MprisFetcher2::connectToBus()

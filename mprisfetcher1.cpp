@@ -58,27 +58,26 @@ MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QStri
 MprisFetcher1::~MprisFetcher1()
 {
     disconnectToBus();
+	delete FPlayerInterface;
 }
 
 void MprisFetcher1::connectToBus()
 {
-    QDBusConnection::sessionBus().connect(
-                ORG_MPRIS_1 + FPlayerName,
-                "/Player",
-                "org.freedesktop.MediaPlayer",
-                "TrackChange",
-                "a{sv}",
-                this,
-                SLOT(onTrackChange(QVariantMap)));
+	QDBusConnection::sessionBus().connect(ORG_MPRIS_1 + FPlayerName,
+										  "/Player",
+										  "org.freedesktop.MediaPlayer",
+										  "TrackChange",
+										  "a{sv}",
+										  this,
+										  SLOT(onTrackChange(QVariantMap)));
 
-    QDBusConnection::sessionBus().connect(
-                ORG_MPRIS_1 + FPlayerName,
-                "/Player",
-                "org.freedesktop.MediaPlayer",
-                "StatusChange",
-                "(iiii)",
-                this,
-                SLOT(onPlayerStatusChange(PlayerStatus)));
+	QDBusConnection::sessionBus().connect(ORG_MPRIS_1 + FPlayerName,
+										  "/Player",
+										  "org.freedesktop.MediaPlayer",
+										  "StatusChange",
+										  "(iiii)",
+										  this,
+										  SLOT(onPlayerStatusChange(PlayerStatus)));
 
     Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
@@ -92,6 +91,7 @@ void MprisFetcher1::disconnectToBus()
                                              "(iiii)",
                                              this,
                                              SLOT(onPlayerStatusChange(PlayerStatus)));
+
     QDBusConnection::sessionBus().disconnect(ORG_MPRIS_1 + FPlayerName,
                                              "/Player",
                                              "org.freedesktop.MediaPlayer",
@@ -99,13 +99,13 @@ void MprisFetcher1::disconnectToBus()
                                              "a{sv}",
                                              this,
                                              SLOT(onTrackChange(QVariantMap)));
+
     Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 void MprisFetcher1::playerPlay()
 {
-    if (!FPlayerInterface || !FPlayerInterface->isValid())
-    {
+	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
         return;
     }
 
@@ -119,8 +119,7 @@ void MprisFetcher1::playerPlay()
 
 void MprisFetcher1::playerStop()
 {
-    if (!FPlayerInterface || !FPlayerInterface->isValid())
-    {
+	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
         return;
     }
 
@@ -130,8 +129,7 @@ void MprisFetcher1::playerStop()
 
 void MprisFetcher1::playerPrev()
 {
-    if (!FPlayerInterface || !FPlayerInterface->isValid())
-    {
+	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
         return;
     }
 
@@ -141,8 +139,7 @@ void MprisFetcher1::playerPrev()
 
 void MprisFetcher1::playerNext()
 {
-    if (!FPlayerInterface || !FPlayerInterface->isValid())
-    {
+	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
         return;
     }
 
@@ -152,9 +149,8 @@ void MprisFetcher1::playerNext()
 
 void MprisFetcher1::updateStatus()
 {
-
     QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
-	//Q_ASSERT(status.isValid());
+	Q_ASSERT(status.isValid());
     if (status.isValid()) {
         onPlayerStatusChange(status.value());
 
