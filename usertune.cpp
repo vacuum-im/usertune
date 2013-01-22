@@ -320,6 +320,13 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 		{
 			onStopPublishing();
 		}
+		else
+		{
+			if (FMetaDataFetcher)
+			{
+				FMetaDataFetcher->updateStatus();
+			}
+		}
 	}
 	else if (ANode.path() == OPV_UT_NOT_ALLOW_SEND_URL_INFO)
 	{

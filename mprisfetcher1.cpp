@@ -6,12 +6,12 @@
 
 QDBusArgument &operator<< (QDBusArgument &arg, const PlayerStatus &ps)
 {
-    arg.beginStructure ();
+	arg.beginStructure();
     arg << ps.Play
         << ps.PlayRandom
         << ps.Repeat
         << ps.RepeatPlaylist;
-    arg.endStructure ();
+	arg.endStructure();
     return arg;
 }
 
@@ -27,11 +27,11 @@ const QDBusArgument &operator>> (const QDBusArgument &arg, PlayerStatus &ps)
 }
 
 MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QString::Null()) :
-    IMetaDataFetcher(parent)
+	IMetaDataFetcher(parent)
 {
     qDBusRegisterMetaType<PlayerStatus>();
 
-    FPlayerInterface = NULL;
+	FPlayerInterface = NULL;
 
     if (APlayerName.isNull() || APlayerName.isEmpty()) {
 #ifndef QT_NO_DEBUG
