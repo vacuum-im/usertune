@@ -27,15 +27,13 @@ public slots:
 	virtual void onPlayerNameChange(const QString &);
 
 private slots:
-	void onPropertyChange(QDBusMessage AMsg);
+	void onPropertyChange(QDBusMessage);
 	virtual void onPlayersExistenceChanged(QString, QString, QString);
 
 private:
 	void connectToBus();
 	void disconnectToBus();
-
-private:
-	UserTuneData FUserTuneData;
+	QDBusInterface* createPlayerInterface();
 };
 
 #endif // MPRISFETCHER2_H
