@@ -679,7 +679,7 @@ void UserTuneHandler::onSendPep()
 
 void UserTuneHandler::onPlayerSatusChanged(PlayerStatus AStatus)
 {
-	if (AStatus.Play == PlayingStatus::Stopped)
+	if (AStatus.Play == PlaybackStatus::Stopped)
 	{
 		onStopPublishing();
 	}

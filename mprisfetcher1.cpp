@@ -115,7 +115,7 @@ void MprisFetcher1::playerPlay()
         return;
     }
 
-    if (FStatus.Play == PlayingStatus::Paused) {
+    if (FStatus.Play == PlaybackStatus::Paused) {
         FPlayerInterface->call("Play");
     } else {
         FPlayerInterface->call("Pause");
@@ -164,7 +164,7 @@ void MprisFetcher1::updateStatus()
 	if (status.isValid()) {
 		onPlayerStatusChange(status.value());
 
-		if (FStatus.Play != PlayingStatus::Stopped) {
+		if (FStatus.Play != PlaybackStatus::Stopped) {
 			QDBusReply<QVariantMap> metadata = FPlayerInterface->call("GetMetadata");
 			Q_ASSERT(metadata.isValid());
 			if (metadata.isValid()) {
@@ -258,7 +258,7 @@ void MprisFetcher1::onPlayersExistenceChanged(QString AName, QString /*empty*/, 
             delete FPlayerInterface;
             FPlayerInterface = NULL;
 
-            FStatus.Play = PlayingStatus::Stopped;
+            FStatus.Play = PlaybackStatus::Stopped;
             emit statusChanged(FStatus);
         }
     }

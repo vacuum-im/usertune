@@ -200,12 +200,11 @@ void MprisFetcher2::parsePlaybackStatus(const QString &AStatus)
 	PlayerStatus pStatus;
 
 	if (AStatus == QLatin1String("Playing")) {
-		// TODO: rename to PlaybackStatus
-		pStatus.Play = PlayingStatus::Playing;
+		pStatus.Play = PlaybackStatus::Playing;
 	} else if (AStatus == QLatin1String("Paused")) {
-		pStatus.Play = PlayingStatus::Paused;
+		pStatus.Play = PlaybackStatus::Paused;
 	} else if (AStatus == QLatin1String("Stopped")) {
-		pStatus.Play = PlayingStatus::Stopped;
+		pStatus.Play = PlaybackStatus::Stopped;
 	}
 
 	emit statusChanged(pStatus);
@@ -261,7 +260,7 @@ void MprisFetcher2::onPlayersExistenceChanged(QString AName, QString /*empty*/, 
             FPlayerInterface = NULL;
 
 			PlayerStatus status;
-			status.Play = PlayingStatus::Stopped;
+			status.Play = PlaybackStatus::Stopped;
 			emit statusChanged(status);
         }
     }
