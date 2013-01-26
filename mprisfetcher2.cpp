@@ -26,7 +26,6 @@ MprisFetcher2::MprisFetcher2(QObject *parent, const QString &APlayerName = QStri
         return;
     }
 
-    updateStatus();
     connectToBus();
 }
 
@@ -116,13 +115,20 @@ void MprisFetcher2::updateStatus()
 								 QDBusConnection::sessionBus(),
 								 this);
 
-		QDBusMessage message = interface.call(QLatin1String("Get"),
-											  QLatin1String("Metadata"));
-		onPropertyChange(message);
+		QDBusReply<QVariant> trackInfo = interface.call(QLatin1String("Get"),
+														QLatin1String("org.mpris.MediaPlayer2.Player"),
+														QLatin1String("Metadata"));
+		if (trackInfo.isValid()) {
+			QDBusArgument argument = static_cast<QVariant>(trackInfo.value()).value<QDBusArgument>();
+			parseTrackInfo(qdbus_cast<QVariantMap>(argument));
+		}
 
-		message = interface.call(QLatin1String("Get"),
-								 QLatin1String("PlaybackStatus"));
-		onPropertyChange(message);
+		QDBusReply<QVariant> playbackStatus = interface.call(QLatin1String("Get"),
+															QLatin1String("org.mpris.MediaPlayer2.Player"),
+															QLatin1String("PlaybackStatus"));
+		if (playbackStatus.isValid()) {
+			parsePlaybackStatus(playbackStatus.value().toString());
+		}
 	}
 	Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
@@ -149,6 +155,62 @@ void MprisFetcher2::onPlayerNameChange(const QString &AName)
     }
 }
 
+void MprisFetcher2::parseTrackInfo(const QVariantMap &ATrackInfo)
+{
+	UserTuneData data;
+
+	if (ATrackInfo.contains(QLatin1String("xesam:artist"))) {
+		data.artist = ATrackInfo[QLatin1String("xesam:artist")].toString();
+	} else if (ATrackInfo.contains(QLatin1String("xesam:composer"))) {
+		data.artist = ATrackInfo[QLatin1String("xesam:composer")].toString();
+	}
+
+	if (ATrackInfo.contains(QLatin1String("mpris:length"))) {
+		data.length = ATrackInfo[QLatin1String("mpris:length")].toULongLong() / 1000000;
+	}
+
+	if (ATrackInfo.contains(QLatin1String("xesam:userRating"))) {
+		// use rating from 1 to 10
+		data.rating = ATrackInfo[QLatin1String("xesam:userRating")].toUInt() * 2;
+	} else if (ATrackInfo.contains(QLatin1String("rating"))) {
+		data.rating = ATrackInfo[QLatin1String("rating")].toUInt() * 2;
+	}
+
+	if (ATrackInfo.contains(QLatin1String("xesam:album"))) {
+		data.source = ATrackInfo[QLatin1String("xesam:album")].toString();
+	}
+
+	if (ATrackInfo.contains(QLatin1String("xesam:title"))) {
+		data.title = ATrackInfo[QLatin1String("xesam:title")].toString();
+	}
+
+	if (ATrackInfo.contains(QLatin1String("xesam:trackNumber"))) {
+		data.track = ATrackInfo[QLatin1String("xesam:trackNumber")].toString();
+	}
+
+	if (ATrackInfo.contains(QLatin1String("xesam:url"))) {
+		data.uri = ATrackInfo[QLatin1String("xesam:url")].toUrl();
+	}
+
+	emit trackChanged(data);
+}
+
+void MprisFetcher2::parsePlaybackStatus(const QString &AStatus)
+{
+	PlayerStatus pStatus;
+
+	if (AStatus == QLatin1String("Playing")) {
+		// TODO: rename to PlaybackStatus
+		pStatus.Play = PlayingStatus::Playing;
+	} else if (AStatus == QLatin1String("Paused")) {
+		pStatus.Play = PlayingStatus::Paused;
+	} else if (AStatus == QLatin1String("Stopped")) {
+		pStatus.Play = PlayingStatus::Stopped;
+	}
+
+	emit statusChanged(pStatus);
+}
+
 void MprisFetcher2::onPropertyChange(QDBusMessage AMsg)
 {
 	QVariantMap map;
@@ -165,58 +227,12 @@ void MprisFetcher2::onPropertyChange(QDBusMessage AMsg)
 	if (map.contains(QLatin1String("Metadata"))) {
 		// QVariantMap -> QVariant -> QDBusArgument -> QVariantMap
 		const QVariantMap trackInfo = qdbus_cast<QVariantMap>(map[QLatin1String("Metadata")]);
-		UserTuneData data;
-
-		if (trackInfo.contains(QLatin1String("xesam:artist"))) {
-			data.artist = trackInfo[QLatin1String("xesam:artist")].toString();
-		} else if (trackInfo.contains(QLatin1String("xesam:composer"))) {
-			data.artist = trackInfo[QLatin1String("xesam:composer")].toString();
-		}
-
-		if (trackInfo.contains(QLatin1String("mpris:length"))) {
-			data.length = trackInfo[QLatin1String("mpris:length")].toULongLong() / 1000000;
-		}
-
-		if (trackInfo.contains(QLatin1String("xesam:userRating"))) {
-			// use rating from 1 to 10
-			data.rating = trackInfo[QLatin1String("xesam:userRating")].toUInt() * 2;
-		} else if (trackInfo.contains(QLatin1String("rating"))) {
-			data.rating = trackInfo[QLatin1String("rating")].toUInt() * 2;
-		}
-
-		if (trackInfo.contains(QLatin1String("xesam:album"))) {
-			data.source = trackInfo[QLatin1String("xesam:album")].toString();
-		}
-
-		if (trackInfo.contains(QLatin1String("xesam:title"))) {
-			data.title = trackInfo[QLatin1String("xesam:title")].toString();
-		}
-
-		if (trackInfo.contains(QLatin1String("xesam:trackNumber"))) {
-			data.track = trackInfo[QLatin1String("xesam:trackNumber")].toString();
-		}
-
-		if (trackInfo.contains(QLatin1String("xesam:url"))) {
-			data.uri = trackInfo[QLatin1String("xesam:url")].toUrl();
-		}
-
-		emit trackChanged(data);
+		parseTrackInfo(trackInfo);
 	}
 
 	if (map.contains(QLatin1String("PlaybackStatus"))) {
-		QString sStatus = map.value(QLatin1String("PlaybackStatus")).toString();
-		PlayerStatus pStatus;
-
-		if (sStatus == QLatin1String("Playing")) {
-			// TODO: rename to PlaybackStatus
-			pStatus.Play = PlayingStatus::Playing;
-		} else if (sStatus == QLatin1String("Paused")) {
-			pStatus.Play = PlayingStatus::Paused;
-		} else if (sStatus == QLatin1String("Stopped")) {
-			pStatus.Play = PlayingStatus::Stopped;
-		}
-
-		emit statusChanged(pStatus);
+		const QString sStatus = map.value(QLatin1String("PlaybackStatus")).toString();
+		parsePlaybackStatus(sStatus);
 	}
 }
 

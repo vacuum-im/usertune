@@ -73,7 +73,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = "1.0.1";
+	APluginInfo->version = "1.0.2";
 	APluginInfo->author = "Crying Angel";
 	APluginInfo->homePage = "http://www.vacuum-im.org";
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -278,7 +278,7 @@ bool UserTuneHandler::initSettings()
 QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &ANodeId, QWidget *AParent)
 {
 	QMultiMap<int, IOptionsWidget *> widgets;
-	if (FOptionsManager && ANodeId==OPN_USERTUNE)
+	if (FOptionsManager && ANodeId == OPN_USERTUNE)
 	{
 #ifdef Q_WS_X11
 		widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
@@ -298,7 +298,7 @@ void UserTuneHandler::onOptionsOpened()
 #ifdef Q_WS_X11
 	onOptionsChanged(Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO));
 	onOptionsChanged(Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO));
-	updateFetchers();
+	onOptionsChanged(Options::node(OPV_UT_PLAYER_VER));
 #endif
 }
 
@@ -314,6 +314,18 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 		FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
 	}
 #ifdef Q_WS_X11
+	else if (ANode.path() == OPV_UT_PLAYER_VER)
+	{
+		updateFetchers();
+	}
+	else if (ANode.path() == OPV_UT_PLAYER_NAME)
+	{
+		Q_ASSERT(FMetaDataFetcher);
+		if (FMetaDataFetcher)
+		{
+			FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+		}
+	}
 	else if (ANode.path() == OPV_UT_ALLOW_SEND_MUSIC_INFO)
 	{
 		if (!(FAllowSendPEP = Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).value().toBool()))
@@ -322,6 +334,7 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 		}
 		else
 		{
+			Q_ASSERT(FMetaDataFetcher);
 			if (FMetaDataFetcher)
 			{
 				FMetaDataFetcher->updateStatus();
@@ -331,17 +344,6 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 	else if (ANode.path() == OPV_UT_NOT_ALLOW_SEND_URL_INFO)
 	{
 		FAllowSendURLInPEP = !Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO).value().toBool();
-	}
-	else if (ANode.path() == OPV_UT_PLAYER_VER)
-	{
-		updateFetchers();
-	}
-	else if (ANode.path() == OPV_UT_PLAYER_NAME)
-	{
-		if (FMetaDataFetcher)
-		{
-			FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
-		}
 	}
 #endif
 }
@@ -386,8 +388,9 @@ bool UserTuneHandler::setRosterData(IRosterIndex *AIndex, int ARole, const QVari
 QList<quint32> UserTuneHandler::rosterLabels(int AOrder, const IRosterIndex *AIndex) const
 {
 	QList<quint32> labels;
-	if (AOrder==RLHO_USERTUNE && FTuneLabelVisible && !AIndex->data(RDR_USERTUNE).isNull())
+	if (AOrder == RLHO_USERTUNE && FTuneLabelVisible && !AIndex->data(RDR_USERTUNE).isNull()) {
 		labels.append(FUserTuneLabelId);
+	}
 	return labels;
 }
 
@@ -404,15 +407,13 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 	Q_UNUSED(AStreamJid);
 	Q_ASSERT(FMetaDataFetcher);
 
-	if (!AMessage.body().startsWith('/'))
-	{
+	if (!AMessage.body().startsWith('/')) {
 		return false;
 	}
 
 	bool breakNextCheck = false;
 
-	if (FMetaDataFetcher && AOrder == MEO_USERTUNE && ADirection == IMessageProcessor::MessageOut)
-	{
+	if (FMetaDataFetcher && AOrder == MEO_USERTUNE && ADirection == IMessageProcessor::MessageOut) {
 		bool clearWidget = false;
 #if QT_VERSION >= 0x040800
 		QStringRef body = AMessage.body().midRef(1);
@@ -421,28 +422,23 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 #endif
 
 		if (body.startsWith(QLatin1String("play"), Qt::CaseInsensitive) ||
-				body.startsWith(QLatin1String("pause"), Qt::CaseInsensitive))
-		{
+				body.startsWith(QLatin1String("pause"), Qt::CaseInsensitive)) {
 			FMetaDataFetcher->playerPlay();
 			breakNextCheck = clearWidget = true;
 		}
-		else if (body.startsWith(QLatin1String("stop"), Qt::CaseInsensitive))
-		{
+		else if (body.startsWith(QLatin1String("stop"), Qt::CaseInsensitive)) {
 			FMetaDataFetcher->playerStop();
 			breakNextCheck = clearWidget = true;
 		}
-		else if (body.startsWith(QLatin1String("next"), Qt::CaseInsensitive))
-		{
+		else if (body.startsWith(QLatin1String("next"), Qt::CaseInsensitive)) {
 			FMetaDataFetcher->playerNext();
 			breakNextCheck = clearWidget = true;
 		}
-		else if (body.startsWith(QLatin1String("prev"), Qt::CaseInsensitive))
-		{
+		else if (body.startsWith(QLatin1String("prev"), Qt::CaseInsensitive)) {
 			FMetaDataFetcher->playerPrev();
 			breakNextCheck = clearWidget = true;
 		}
-		else if (body.startsWith(QLatin1String("np"), Qt::CaseInsensitive))
-		{
+		else if (body.startsWith(QLatin1String("np"), Qt::CaseInsensitive)) {
 			AMessage.setBody(getTagFormated(FUserTuneData));
 			breakNextCheck = !(clearWidget = true);
 		}
@@ -515,7 +511,7 @@ void UserTuneHandler::onNotificationRemoved(int ANotifyId)
 void UserTuneHandler::onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AIndexes, quint32 ALabelId, Menu *AMenu)
 {
 	QList<int> indexTypes = QList<int>() << RIT_CONTACT << RIT_STREAM_ROOT;
-	if (ALabelId==AdvancedDelegateItem::DisplayId && AIndexes.count()==1 && indexTypes.contains(AIndexes.first()->type()))
+	if (ALabelId == AdvancedDelegateItem::DisplayId && AIndexes.count() == 1 && indexTypes.contains(AIndexes.first()->type()))
 	{
 		QString song = getTagFormated(AIndexes.first()->data(RDR_STREAM_JID).toString(), AIndexes.first()->data(RDR_PREP_BARE_JID).toString());
 		if (!song.isEmpty())
@@ -532,15 +528,15 @@ void UserTuneHandler::onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AI
 void UserTuneHandler::onCopyToClipboardActionTriggered(bool)
 {
 	Action *action = qobject_cast<Action *>(sender());
-	if (action)
+	if (action) {
 		QApplication::clipboard()->setText(action->data(ADR_CLIPBOARD_DATA).toString());
+	}
 }
 
 #ifdef Q_WS_X11
 void UserTuneHandler::updateFetchers()
 {
-	if (FMetaDataFetcher)
-	{
+	if (FMetaDataFetcher) {
 		delete FMetaDataFetcher;
 		FMetaDataFetcher = NULL;
 	}
@@ -557,16 +553,18 @@ void UserTuneHandler::updateFetchers()
 	// for Windows players...
 #endif
 	default:
+#ifndef QT_NO_DEBUG
+		qWarning() << "Not supported fetcher version: " << Options::node(OPV_UT_PLAYER_VER).value().toUInt();
+#endif
 		break;
 	}
 
-	if (FMetaDataFetcher)
-	{
+	if (FMetaDataFetcher) {
 		connect(FMetaDataFetcher, SIGNAL(trackChanged(UserTuneData)), this, SLOT(onTrackChanged(UserTuneData)));
 		connect(FMetaDataFetcher, SIGNAL(statusChanged(PlayerStatus)), this, SLOT(onPlayerSatusChanged(PlayerStatus)));
-	}
-	else
-	{
+
+		FMetaDataFetcher->updateStatus();
+	} else {
 		onStopPublishing();
 	}
 }
@@ -637,8 +635,7 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
 
 	FUserTuneData = data;
 
-	if (FAllowSendPEP)
-	{
+	if (FAllowSendPEP) {
 		FTimer.start();
 	}
 }
@@ -680,9 +677,9 @@ void UserTuneHandler::onSendPep()
 	}
 }
 
-void UserTuneHandler::onPlayerSatusChanged(PlayerStatus status)
+void UserTuneHandler::onPlayerSatusChanged(PlayerStatus AStatus)
 {
-	if (status.Play == PlayingStatus::Stopped)
+	if (AStatus.Play == PlayingStatus::Stopped)
 	{
 		onStopPublishing();
 	}

@@ -34,6 +34,8 @@ private:
 	void connectToBus();
 	void disconnectToBus();
 	QDBusInterface* createPlayerInterface();
+	void parseTrackInfo(const QVariantMap &);
+	void parsePlaybackStatus(const QString &);
 };
 
 #endif // MPRISFETCHER2_H

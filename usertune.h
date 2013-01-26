@@ -47,50 +47,50 @@
 #define PEP_USERTUNE              4000
 
 class UserTuneHandler :
-    public QObject,
-    public IPlugin,
-    public IOptionsHolder,
-	public IRosterDataHolder,
-	public IRostersLabelHolder,
-    public IPEPHandler
-#ifdef Q_WS_X11
-        ,
-    public IMessageEditor
-#endif
+		public QObject,
+		public IPlugin,
+		public IOptionsHolder,
+		public IRosterDataHolder,
+		public IRostersLabelHolder,
+		public IPEPHandler
+		#ifdef Q_WS_X11
+		,
+		public IMessageEditor
+		#endif
 
 {
-    Q_OBJECT
+	Q_OBJECT
 #ifdef Q_WS_X11
 	Q_INTERFACES(IPlugin IOptionsHolder IRosterDataHolder IRostersLabelHolder IPEPHandler IMessageEditor)
 #else
-    Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
+	Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 #endif
 public:
-    explicit UserTuneHandler();
-    ~UserTuneHandler();
-    //IMessageEditor
+	explicit UserTuneHandler();
+	~UserTuneHandler();
+	//IMessageEditor
 #ifdef Q_WS_X11
-    virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);
+	virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);
 #endif
-    //IPlugin
-    virtual QObject *instance()
-    {
-        return this;
-    }
-    virtual QUuid pluginUuid() const
-    {
-        return USERTUNE_UUID;
-    }
-    virtual void pluginInfo(IPluginInfo *APluginInfo);
-    virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
-    virtual bool initObjects();
-    virtual bool initSettings();
-    virtual bool startPlugin()
-    {
-        return true;
-    }
-    //IOptionsHolder
-    virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
+	//IPlugin
+	virtual QObject *instance()
+	{
+		return this;
+	}
+	virtual QUuid pluginUuid() const
+	{
+		return USERTUNE_UUID;
+	}
+	virtual void pluginInfo(IPluginInfo *APluginInfo);
+	virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
+	virtual bool initObjects();
+	virtual bool initSettings();
+	virtual bool startPlugin()
+	{
+		return true;
+	}
+	//IOptionsHolder
+	virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
 	//IRosterDataHolder
 	virtual int rosterDataOrder() const;
 	virtual QList<int> rosterDataRoles() const;
@@ -111,10 +111,10 @@ signals:
 
 protected slots:
 #ifdef Q_WS_X11
-    void onTrackChanged(UserTuneData);
-    void onSendPep();
-    void onPlayerSatusChanged(PlayerStatus);
-    void onStopPublishing();
+	void onTrackChanged(UserTuneData);
+	void onPlayerSatusChanged(PlayerStatus);
+	void onSendPep();
+	void onStopPublishing();
 #endif
 	void onContactStateChanged(const Jid &streamJid, const Jid &senderJid, bool AStateOnline);
 	void onCopyToClipboardActionTriggered(bool);
@@ -160,28 +160,28 @@ private:
 	IXmppStreams *FXmppStreams;
 #ifdef Q_WS_X11
 	IMessageWidgets *FMessageWidgets;
-    IMetaDataFetcher *FMetaDataFetcher;
-    IMultiUserChatPlugin *FMultiUserChatPlugin;
-    UserTuneData FUserTuneData;
-    QTimer FTimer;
+	IMetaDataFetcher *FMetaDataFetcher;
+	IMultiUserChatPlugin *FMultiUserChatPlugin;
+	UserTuneData FUserTuneData;
+	QTimer FTimer;
 #endif
 	bool FTuneLabelVisible;
-    int FHandlerId;
-    quint32 FUserTuneLabelId;
+	int FHandlerId;
+	quint32 FUserTuneLabelId;
 #ifdef Q_WS_X11
 	bool FAllowSendPEP;
 	bool FAllowSendURLInPEP;
-    QString FFormatTag;
+	QString FFormatTag;
 #endif
 
 	QHash<Jid, QHash <QString, UserTuneData> > FContactTune;
-    QMap<int, Jid> FNotifies;
+	QMap<int, Jid> FNotifies;
 
 private:
 #ifdef Q_WS_X11
-    void updateFetchers();
+	void updateFetchers();
 	QString getTagFormated(const Jid &streamJid, const Jid &senderJid) const;
-    QString getTagFormated(const UserTuneData &AUserData) const;
+	QString getTagFormated(const UserTuneData &AUserData) const;
 #endif
 };
 

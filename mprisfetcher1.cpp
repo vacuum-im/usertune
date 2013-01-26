@@ -50,7 +50,6 @@ MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QStri
         return;
     }
 
-    updateStatus();
     connectToBus();
 }
 
