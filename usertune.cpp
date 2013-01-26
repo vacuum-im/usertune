@@ -462,8 +462,9 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 				break;
 			}
 			Q_ASSERT(widget);
-			if (widget)
+			if (widget) {
 				widget->clearEditor();
+			}
 		}
 	}
 

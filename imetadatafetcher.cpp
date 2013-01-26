@@ -61,13 +61,3 @@ IMetaDataFetcher::~IMetaDataFetcher()
                                            SLOT(onPlayersExistenceChanged(QString, QString, QString)));
 #endif
 }
-
-PlayerStatus IMetaDataFetcher::getPlayerStatus()
-{
-    if (!FPlayerInterface || !FPlayerInterface->isValid())
-    {
-        FStatus.Play = PlayingStatus::Stopped;
-    }
-
-    return FStatus;
-}

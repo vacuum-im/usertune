@@ -19,7 +19,6 @@ public:
 	virtual ~IMetaDataFetcher();
 
 	virtual void updateStatus() = 0;
-	PlayerStatus getPlayerStatus();
 	QString getPlayerName() const { return FPlayerName; }
 
 signals:
@@ -39,7 +38,6 @@ protected slots:
 protected:
 	QString FPlayerName;
 	QDBusInterface *FPlayerInterface;
-	PlayerStatus FStatus;
 };
 
 Q_DECLARE_METATYPE(PlayerStatus)
