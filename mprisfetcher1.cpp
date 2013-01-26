@@ -41,8 +41,7 @@ MprisFetcher1::MprisFetcher1(QObject *parent, const QString &APlayerName = QStri
     }
 
     FPlayerName = APlayerName;
-    FPlayerInterface = new QDBusInterface(ORG_MPRIS_1 + FPlayerName, "/Player",
-                                          "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
+	FPlayerInterface = createPlayerInterface();
 
     if (FPlayerInterface->lastError().type() != QDBusError::NoError) {
 #ifndef QT_NO_DEBUG
@@ -103,6 +102,14 @@ void MprisFetcher1::disconnectToBus()
     Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
+QDBusInterface* MprisFetcher1::createPlayerInterface()
+{
+	return new QDBusInterface(ORG_MPRIS_1 + FPlayerName,
+								  QLatin1String("/Player"),
+								  QLatin1String("org.freedesktop.MediaPlayer"),
+								  QDBusConnection::sessionBus());
+}
+
 void MprisFetcher1::playerPlay()
 {
 	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
@@ -149,19 +156,23 @@ void MprisFetcher1::playerNext()
 
 void MprisFetcher1::updateStatus()
 {
-    QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
-	Q_ASSERT(status.isValid());
-    if (status.isValid()) {
-        onPlayerStatusChange(status.value());
+	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
+		return;
+	}
 
-        if (FStatus.Play != PlayingStatus::Stopped) {
-            QDBusReply<QVariantMap> metadata = FPlayerInterface->call("GetMetadata");
-            Q_ASSERT(metadata.isValid());
-            if (metadata.isValid()) {
-                onTrackChange(metadata.value());
-            }
-        }
-    }
+	QDBusReply<PlayerStatus> status = FPlayerInterface->call("GetStatus");
+	Q_ASSERT(status.isValid());
+	if (status.isValid()) {
+		onPlayerStatusChange(status.value());
+
+		if (FStatus.Play != PlayingStatus::Stopped) {
+			QDBusReply<QVariantMap> metadata = FPlayerInterface->call("GetMetadata");
+			Q_ASSERT(metadata.isValid());
+			if (metadata.isValid()) {
+				onTrackChange(metadata.value());
+			}
+		}
+	}
 }
 
 void MprisFetcher1::onPlayerNameChange(const QString &AName)
@@ -178,8 +189,7 @@ void MprisFetcher1::onPlayerNameChange(const QString &AName)
         FPlayerInterface = NULL;
     }
 
-    FPlayerInterface = new QDBusInterface(ORG_MPRIS_1 + FPlayerName, "/Player",
-                                          "org.freedesktop.MediaPlayer", QDBusConnection::sessionBus());
+	FPlayerInterface = createPlayerInterface();
     Q_ASSERT(FPlayerInterface && FPlayerInterface->isValid());
     if (FPlayerInterface && FPlayerInterface->isValid()) {
         updateStatus();
@@ -218,33 +228,31 @@ void MprisFetcher1::onTrackChange(QVariantMap trackInfo)
 
 void MprisFetcher1::onPlayerStatusChange(PlayerStatus status)
 {
-    if (FStatus != status) {
-        FStatus = status;
+	FStatus = status;
 
-        emit statusChanged(FStatus);
-    }
+	emit statusChanged(status);
 }
 
-void MprisFetcher1::onPlayersExistenceChanged(QString name, QString /*empty*/, QString newOwner)
+void MprisFetcher1::onPlayersExistenceChanged(QString AName, QString /*empty*/, QString ANewOwner)
 {
     // TODO: mprisfetcher1 not needed think of ORG_MPRIS_2
-    if (!name.startsWith(ORG_MPRIS_1) || name.startsWith(ORG_MPRIS_2)) {
+	if (!AName.startsWith(ORG_MPRIS_1) || AName.startsWith(ORG_MPRIS_2)) {
         return;
     }
 
 #if QT_VERSION >= 0x040800
-    QStringRef newPlayer = name.midRef(QString(ORG_MPRIS_1).length());
+	const QStringRef thisPlayer = AName.midRef(QString(ORG_MPRIS_1).length());
 #else
-    QString newPlayer = name.mid(QString(ORG_MPRIS_1).length());
+	const QString thisPlayer = AName.mid(QString(ORG_MPRIS_1).length());
 #endif
 
-    if (FPlayerName == newPlayer) {
-        // player not closed
-        if (!newOwner.isEmpty()) {
+	if (thisPlayer == FPlayerName) {
+		// player did not closed and did not opened before
+		if (!ANewOwner.isEmpty() && !FPlayerInterface) {
 #if QT_VERSION >= 0x040800
-            onPlayerNameChange(newPlayer.toString());
+			onPlayerNameChange(thisPlayer.toString());
 #else
-            onPlayerNameChange(newPlayer);
+			onPlayerNameChange(thisPlayer);
 #endif
         } else {
             disconnectToBus();

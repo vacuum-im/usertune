@@ -34,6 +34,9 @@ private slots:
 private:
 	void connectToBus();
 	void disconnectToBus();
+	QDBusInterface* createPlayerInterface();
+
+	PlayerStatus FStatus;
 };
 
 #endif // MPRISFETCHER1_H
