@@ -5,7 +5,7 @@ QStringList getPlayersList(const int &ver)
 {
     QStringList ret_list;
 #ifdef Q_WS_X11
-    QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter("org.mpris.");
+	QStringList services = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().filter(ORG_MPRIS_1);
 #elif Q_WS_WIN
 
 #endif
@@ -13,18 +13,18 @@ QStringList getPlayersList(const int &ver)
     switch (ver)
     {
 #ifdef  Q_WS_X11
-    case FetchrVer::mprisV1:
+    case FetcherVer::mprisV1:
         foreach (QString service, services)
         {
-            if (!service.startsWith("org.mpris.MediaPlayer2."))
-                ret_list << service.replace("org.mpris.","");
+			if (!service.startsWith(ORG_MPRIS_2))
+				ret_list << service.replace(ORG_MPRIS_1,"");
         }
         break;
-     case FetchrVer::mprisV2:
+     case FetcherVer::mprisV2:
         foreach (QString service, services)
         {
-            if (service.startsWith("org.mpris.MediaPlayer2."))
-                ret_list << service.replace("org.mpris.MediaPlayer2.","");
+			if (service.startsWith(ORG_MPRIS_2))
+				ret_list << service.replace(ORG_MPRIS_2,"");
         }
         break;
 #elif Q_WS_WIN
@@ -60,24 +60,4 @@ IMetaDataFetcher::~IMetaDataFetcher()
                                            this,
                                            SLOT(onPlayersExistenceChanged(QString, QString, QString)));
 #endif
-}
-
-PlayerStatus IMetaDataFetcher::getPlayerStatus()
-{
-    if (!FPlayerInterface || !FPlayerInterface->isValid())
-    {
-        FStatus.Play = PSStopped;
-    }
-
-    return FStatus;
-}
-
-QVariantMap IMetaDataFetcher::getMetadata()
-{
-    if (FPlayerInterface && FPlayerInterface->isValid())
-    {
-        return FTrackInfo;
-    } else {
-        return QVariantMap();
-    }
 }

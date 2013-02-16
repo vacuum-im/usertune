@@ -21,18 +21,21 @@
 #include <QTextDocument>
 #include <QTimer>
 
-#include <interfaces/ipluginmanager.h>
-#include <interfaces/ipepmanager.h>
-#include <interfaces/iservicediscovery.h>
-#include <interfaces/ixmppstreams.h>
-#include <interfaces/ioptionsmanager.h>
-#ifdef Q_WS_X11
-#include <interfaces/imessageprocessor.h>
-#endif
 #include <interfaces/inotifications.h>
+#include <interfaces/ioptionsmanager.h>
+#include <interfaces/ipepmanager.h>
+#include <interfaces/ipluginmanager.h>
+#include <interfaces/ipresence.h>
 #include <interfaces/iroster.h>
 #include <interfaces/irostersmodel.h>
 #include <interfaces/irostersview.h>
+#include <interfaces/iservicediscovery.h>
+#include <interfaces/ixmppstreams.h>
+#ifdef Q_WS_X11
+#include <interfaces/imessageprocessor.h>
+#include <interfaces/imessagewidgets.h>
+#include <interfaces/imultiuserchat.h>
+#endif
 
 #include <utils/options.h>
 #ifdef Q_WS_X11
@@ -40,126 +43,141 @@
 #endif
 #include "usertunetypes.h"
 
-#ifdef SVNINFO
-#  include "svninfo.h"
-#else
-#  define SVN_REVISION              "0"
-#endif
-
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 #define PEP_USERTUNE              4000
 
 class UserTuneHandler :
-    public QObject,
-    public IPlugin,
-    public IOptionsHolder,
-    public IPEPHandler
-#ifdef Q_WS_X11
-        ,
-    public IMessageEditor
-#endif
+		public QObject,
+		public IPlugin,
+		public IOptionsHolder,
+		public IRosterDataHolder,
+		public IPEPHandler
+		#ifdef Q_WS_X11
+		,
+		public IMessageEditor
+		#endif
 
 {
-    Q_OBJECT
-    Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
-public:
-    explicit UserTuneHandler();
-    ~UserTuneHandler();
-    //IMessageEditor
+	Q_OBJECT
 #ifdef Q_WS_X11
-    virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);
+	Q_INTERFACES(IPlugin IOptionsHolder IRosterDataHolder IPEPHandler IMessageEditor)
+#else
+	Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 #endif
-    //IPlugin
-    virtual QObject *instance()
-    {
-        return this;
-    }
-    virtual QUuid pluginUuid() const
-    {
-        return USERTUNE_UUID;
-    }
-    virtual void pluginInfo(IPluginInfo *APluginInfo);
-    virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
-    virtual bool initObjects();
-    virtual bool initSettings();
-    virtual bool startPlugin()
-    {
-        return true;
-    }
-    //IOptionsHolder
-    virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
-    //IPEPHandler
-    virtual bool processPEPEvent(const Jid &AStreamJid, const Stanza &AStanza);
+public:
+	explicit UserTuneHandler();
+	~UserTuneHandler();
+	//IMessageEditor
+#ifdef Q_WS_X11
+	virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);
+#endif
+	//IPlugin
+	virtual QObject *instance()
+	{
+		return this;
+	}
+	virtual QUuid pluginUuid() const
+	{
+		return USERTUNE_UUID;
+	}
+	virtual void pluginInfo(IPluginInfo *APluginInfo);
+	virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
+	virtual bool initObjects();
+	virtual bool initSettings();
+	virtual bool startPlugin()
+	{
+		return true;
+	}
+	//IOptionsHolder
+	virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
+	//IRosterDataHolder
+	virtual int rosterDataOrder() const;
+	virtual QList<int> rosterDataRoles() const;
+	virtual QList<int> rosterDataTypes() const;
+	virtual QVariant rosterData(const IRosterIndex *AIndex, int ARole) const;
+	virtual bool setRosterData(IRosterIndex *AIndex, int ARole, const QVariant &AValue);
+	//IPEPHandler
+	virtual bool processPEPEvent(const Jid &streamJid, const Stanza &AStanza);
+
+signals:
+	//IRosterDataHolder
+	void rosterDataChanged(IRosterIndex *AIndex = NULL, int ARole = 0);
+	//IRostersLabelHolder
+	void rosterLabelChanged(quint32 ALabelId, IRosterIndex *AIndex = NULL);
 
 protected slots:
 #ifdef Q_WS_X11
-    void onTrackChanged(UserTuneData);
-    void onSendPep();
-    void onPlayerSatusChanged(PlayerStatus);
-    void onStopPublishing();
+	void onTrackChanged(UserTuneData);
+	void onPlayerSatusChanged(PlayerStatus);
+	void onSendPep();
+	void onStopPublishing();
 #endif
-    void onSetMainLabel(IXmppStream *);
-    void onUnsetMainLabel(IXmppStream *);
-    void onOptionsOpened();
-    void onOptionsChanged(const OptionsNode &ANode);
-    void onRosterIndexInserted(const Jid &AContactJid, const QString &ASong);
-    void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
-    void onShowNotification(const Jid &AStreamJid, const Jid &AContactJid);
-    void onNotificationActivated(int ANotifyId);
-    void onNotificationRemoved(int ANotifyId);
-    void onApplicationQuit();
+	void onContactStateChanged(const Jid &streamJid, const Jid &senderJid, bool AStateOnline);
+	void onCopyToClipboardActionTriggered(bool);
+	void onNotificationActivated(int ANotifyId);
+	void onNotificationRemoved(int ANotifyId);
+	void onOptionsChanged(const OptionsNode &ANode);
+	void onOptionsOpened();
+	void onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AIndexes, Menu *AMenu);
+	void onRosterIndexToolTips(IRosterIndex *AIndex, int ALabelId, QMultiMap<int,QString> &AToolTips);
+	void onStreamOpened(IXmppStream *);
+	void onStreamClosed(IXmppStream *);
+	void onShowNotification(const Jid &streamJid, const Jid &senderJid);
+	void onApplicationQuit();
 
 protected:
-    void setContactTune(const Jid &AContactJid, const UserTuneData &ASong);
-    void setContactLabel();
-    inline void setContactLabel(const Jid &AContactJid);
-    void unsetContactLabel();
-    inline void unsetContactLabel(const Jid &AContactJid);
-    QString getTagFormat(const Jid &AContactJid) const;
-    QString secToTime(unsigned short sec)
-    {
-        if (sec == 0)
-        {
-            return QString();
-        }
+	void setContactTune(const Jid &streamJid, const Jid &contactJid, const UserTuneData &song);
 
-        int min = 0;
+	//IRosterDataHolder
+	void updateDataHolder(const Jid &streamJid, const Jid &senderJid);
 
-        while (sec > 60) {
-            ++min;
-            sec -= 60;
-        }
-
-        return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
-    }
+	static const QString secondsToString(unsigned short sec)
+	{
+		if (sec == 0)
+			return QString();
+		int min = 0;
+		while (sec > 60) {
+			++min;
+			sec -= 60;
+		}
+		return QString("%1:%2").arg(min).arg(sec,2,10,QChar('0'));
+	}
 
 private:
-    IPEPManager *FPEPManager;
-    IServiceDiscovery *FServiceDiscovery;
-    IXmppStreams *FXmppStreams;
-    IOptionsManager *FOptionsManager;
-    IRosterPlugin *FRosterPlugin;
-    IRostersModel *FRostersModel;
-    IRostersViewPlugin *FRostersViewPlugin;
-    INotifications *FNotifications;
+	INotifications *FNotifications;
+	IOptionsManager *FOptionsManager;
+	IPEPManager *FPEPManager;
+	IPresencePlugin *FPresencePlugin;
+	IRoster *FRoster;
+	IRosterPlugin *FRosterPlugin;
+	IRostersModel *FRostersModel;
+	IRostersViewPlugin *FRostersViewPlugin;
+	IServiceDiscovery *FServiceDiscovery;
+	IXmppStreams *FXmppStreams;
 #ifdef Q_WS_X11
-    IMetaDataFetcher *FMetaDataFetcher;
-    UserTuneData FUserTuneData;
-    QTimer FTimer;
+	IMessageWidgets *FMessageWidgets;
+	IMetaDataFetcher *FMetaDataFetcher;
+	IMultiUserChatPlugin *FMultiUserChatPlugin;
+	UserTuneData FUserTuneData;
+	QTimer FTimer;
+#endif
+	bool FTuneLabelVisible;
+	int FHandlerId;
+	int FUserTuneLabelId;
+#ifdef Q_WS_X11
+	bool FAllowSendPEP;
+	bool FAllowSendURLInPEP;
+	QString FFormatTag;
 #endif
 
-    int FHandlerId;
-    int FUserTuneLabelId;
-#ifdef Q_WS_X11
-    QString FFormatTag;
-#endif
-
-    QMap<Jid, UserTuneData> FContactTune;
-    QMap<int, Jid> FNotifies;
+	QHash<Jid, QHash <QString, UserTuneData> > FContactTune;
+	QMap<int, Jid> FNotifies;
 
 private:
 #ifdef Q_WS_X11
-    void updateFetchers();
+	void updateFetchers();
+	QString getTagFormated(const Jid &streamJid, const Jid &senderJid) const;
+	QString getTagFormated(const UserTuneData &AUserData) const;
 #endif
 };
 
