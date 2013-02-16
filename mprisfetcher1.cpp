@@ -98,7 +98,7 @@ void MprisFetcher1::disconnectToBus()
                                              this,
                                              SLOT(onTrackChange(QVariantMap)));
 
-    Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
+	Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
 QDBusInterface* MprisFetcher1::createPlayerInterface()
@@ -189,7 +189,7 @@ void MprisFetcher1::onPlayerNameChange(const QString &AName)
     }
 
 	FPlayerInterface = createPlayerInterface();
-    Q_ASSERT(FPlayerInterface && FPlayerInterface->isValid());
+	Q_ASSERT(FPlayerInterface && FPlayerInterface->isValid());
     if (FPlayerInterface && FPlayerInterface->isValid()) {
         updateStatus();
         connectToBus();

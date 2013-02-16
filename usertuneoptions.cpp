@@ -41,7 +41,7 @@ void UserTuneOptions::onRefreshPlayers()
 	ui->cb_playerName->clear();
 	ui->cb_playerName->addItems(players);
 
-	index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+	index = ui->cb_playerName->findText(Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 	ui->cb_playerName->setCurrentIndex(index);
 }
 
@@ -56,32 +56,32 @@ void UserTuneOptions::onVersionChange(int index)
 
 void UserTuneOptions::apply()
 {
-	Options::node(OPV_UT_SHOW_ROSTER_LABEL).setValue(ui->chb_showIcon->isChecked());
-	Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).setValue(ui->chb_allowSendMusicInfo->isChecked());
-	Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO).setValue(ui->chb_dontSendURI->isChecked());
-	Options::node(OPV_UT_TAG_FORMAT).setValue(ui->le_format->text());
+	Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL).setValue(ui->chb_showIcon->isChecked());
+	Options::node(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO).setValue(ui->chb_allowSendMusicInfo->isChecked());
+	Options::node(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO).setValue(ui->chb_dontSendURI->isChecked());
+	Options::node(OPV_USERTUNE_TAG_FORMAT).setValue(ui->le_format->text());
 
 	int index = ui->cb_mpris_version->currentIndex();
 
-	Options::node(OPV_UT_PLAYER_VER).setValue(ui->cb_mpris_version->itemData(index).toInt());
-	Options::node(OPV_UT_PLAYER_NAME).setValue(ui->cb_playerName->currentText());
+	Options::node(OPV_USERTUNE_PLAYER_VER).setValue(ui->cb_mpris_version->itemData(index).toInt());
+	Options::node(OPV_USERTUNE_PLAYER_NAME).setValue(ui->cb_playerName->currentText());
 
 	emit childApply();
 }
 
 void UserTuneOptions::reset()
 {
-	ui->chb_showIcon->setChecked(Options::node(OPV_UT_SHOW_ROSTER_LABEL).value().toBool());
-	ui->chb_allowSendMusicInfo->setChecked(Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).value().toBool());
-	ui->chb_dontSendURI->setChecked(Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO).value().toBool());
-	ui->le_format->setText(Options::node(OPV_UT_TAG_FORMAT).value().toString());
+	ui->chb_showIcon->setChecked(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL).value().toBool());
+	ui->chb_allowSendMusicInfo->setChecked(Options::node(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO).value().toBool());
+	ui->chb_dontSendURI->setChecked(Options::node(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO).value().toBool());
+	ui->le_format->setText(Options::node(OPV_USERTUNE_TAG_FORMAT).value().toString());
 
-	int index = ui->cb_mpris_version->findData(Options::node(OPV_UT_PLAYER_VER).value().toInt());
+	int index = ui->cb_mpris_version->findData(Options::node(OPV_USERTUNE_PLAYER_VER).value().toInt());
 	ui->cb_mpris_version->setCurrentIndex(index);
 
 	onRefreshPlayers();
 
-	index = ui->cb_playerName->findText(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+	index = ui->cb_playerName->findText(Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 	ui->cb_playerName->setCurrentIndex(index != -1 ? index : 0);
 
 	emit childReset();

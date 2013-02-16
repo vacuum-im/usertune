@@ -14,6 +14,7 @@
 #include <definitions/rosterdataholderorders.h>
 #include <definitions/rosterindextyperole.h>
 #include <definitions/rostertooltiporders.h>
+
 #include <utils/advanceditemdelegate.h>
 
 #include "usertune.h"
@@ -100,8 +101,8 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	if (!plugin) return false;
 
 	FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
-	connect(FXmppStreams->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
-	connect(FXmppStreams->instance(), SIGNAL(closed(IXmppStream *)), this, SLOT(onUnsetMainLabel(IXmppStream*)));
+	connect(FXmppStreams->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onStreamOpened(IXmppStream*)));
+	connect(FXmppStreams->instance(), SIGNAL(closed(IXmppStream *)), this, SLOT(onStreamClosed(IXmppStream*)));
 
 	int streams_size = FXmppStreams->xmppStreams().size();
 	for (int i = 0; i < streams_size; i++)
@@ -237,32 +238,24 @@ bool UserTuneHandler::initObjects()
 		FRostersModel->insertDefaultDataHolder(this);
 	}
 
-	if (FRostersViewPlugin)
-	{
-		AdvancedDelegateItem label(RLID_USERTUNE);
-		label.d->kind = AdvancedDelegateItem::CustomData;
-		label.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
-		FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(label);
-
-		FRostersViewPlugin->rostersView()->insertLabelHolder(RLHO_USERTUNE,this);
-	}
+	FUserTuneLabelId = 0;
 
 	return true;
 }
 
 bool UserTuneHandler::initSettings()
 {
-	Options::setDefaultValue(OPV_UT_SHOW_ROSTER_LABEL,true);
-	Options::setDefaultValue(OPV_UT_ALLOW_SEND_MUSIC_INFO,true);
-	Options::setDefaultValue(OPV_UT_NOT_ALLOW_SEND_URL_INFO,false);
-	Options::setDefaultValue(OPV_UT_TAG_FORMAT,QLatin1String("%T - %A - %S"));
+	Options::setDefaultValue(OPV_USERTUNE_SHOW_ROSTER_LABEL,true);
+	Options::setDefaultValue(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO,true);
+	Options::setDefaultValue(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO,false);
+	Options::setDefaultValue(OPV_USERTUNE_TAG_FORMAT,QLatin1String("%T - %A - %S"));
 #ifdef Q_WS_X11
-	Options::setDefaultValue(OPV_UT_PLAYER_NAME,QLatin1String("amarok"));
-	Options::setDefaultValue(OPV_UT_PLAYER_VER,FetcherVer::mprisV1);
+	Options::setDefaultValue(OPV_USERTUNE_PLAYER_NAME,QLatin1String("amarok"));
+	Options::setDefaultValue(OPV_USERTUNE_PLAYER_VER,FetcherVer::mprisV1);
 #elif Q_WS_WIN
 	// TODO: сделать для windows
-	Options::setDefaultValue(OPV_UT_PLAYER_NAME,QLatin1String(""));
-	Options::setDefaultValue(OPV_UT_PLAYER_VER,FetchrVer::fetcherNone);
+	Options::setDefaultValue(OPV_USERTUNE_PLAYER_NAME,QLatin1String(""));
+	Options::setDefaultValue(OPV_USERTUNE_PLAYER_VER,FetchrVer::fetcherNone);
 #endif
 
 	if (FOptionsManager)
@@ -283,9 +276,9 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
 #ifdef Q_WS_X11
 		widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
 #elif Q_WS_WIN
-		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
-		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_TAG_FORMAT),tr("Tag format:"),AParent));
-		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_UT_PLAYER_NAME),tr("Player name:"),AParent));
+		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
+		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_TAG_FORMAT),tr("Tag format:"),AParent));
+		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_PLAYER_NAME),tr("Player name:"),AParent));
 #endif
 	}
 	return widgets;
@@ -293,42 +286,63 @@ QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &
 
 void UserTuneHandler::onOptionsOpened()
 {
-	onOptionsChanged(Options::node(OPV_UT_SHOW_ROSTER_LABEL));
-	onOptionsChanged(Options::node(OPV_UT_TAG_FORMAT));
+	onOptionsChanged(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL));
+	onOptionsChanged(Options::node(OPV_USERTUNE_TAG_FORMAT));
 #ifdef Q_WS_X11
-	onOptionsChanged(Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO));
-	onOptionsChanged(Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO));
-	onOptionsChanged(Options::node(OPV_UT_PLAYER_VER));
+	onOptionsChanged(Options::node(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO));
+	onOptionsChanged(Options::node(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO));
+	onOptionsChanged(Options::node(OPV_USERTUNE_PLAYER_VER));
 #endif
 }
 
 void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
-	if (ANode.path() == OPV_UT_SHOW_ROSTER_LABEL)
+	if (ANode.path() == OPV_USERTUNE_SHOW_ROSTER_LABEL)
 	{
 		FTuneLabelVisible = ANode.value().toBool();
-		emit rosterLabelChanged(FUserTuneLabelId,NULL);
+		if(FTuneLabelVisible)
+		{
+			if(FUserTuneLabelId == 0)
+			{
+				AdvancedDelegateItem notifyLabel(RLID_USERTUNE);
+				notifyLabel.d->kind = AdvancedDelegateItem::CustomData;
+				notifyLabel.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
+				FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(notifyLabel);
+				foreach (Jid streamJid, FRostersModel->streams())
+				{
+					onLabelsEnabled(streamJid);
+				}
+			}
+		}
+		else
+		{
+			if(FUserTuneLabelId != 0)
+			{
+				FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId);
+				FUserTuneLabelId = 0;
+			}
+		}
 	}
-	else if (ANode.path() == OPV_UT_TAG_FORMAT)
+	else if (ANode.path() == OPV_USERTUNE_TAG_FORMAT)
 	{
-		FFormatTag = Options::node(OPV_UT_TAG_FORMAT).value().toString();
+		FFormatTag = Options::node(OPV_USERTUNE_TAG_FORMAT).value().toString();
 	}
 #ifdef Q_WS_X11
-	else if (ANode.path() == OPV_UT_PLAYER_VER)
+	else if (ANode.path() == OPV_USERTUNE_PLAYER_VER)
 	{
 		updateFetchers();
 	}
-	else if (ANode.path() == OPV_UT_PLAYER_NAME)
+	else if (ANode.path() == OPV_USERTUNE_PLAYER_NAME)
 	{
 		Q_ASSERT(FMetaDataFetcher);
 		if (FMetaDataFetcher)
 		{
-			FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_UT_PLAYER_NAME).value().toString());
+			FMetaDataFetcher->onPlayerNameChange(Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 		}
 	}
-	else if (ANode.path() == OPV_UT_ALLOW_SEND_MUSIC_INFO)
+	else if (ANode.path() == OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO)
 	{
-		if (!(FAllowSendPEP = Options::node(OPV_UT_ALLOW_SEND_MUSIC_INFO).value().toBool()))
+		if (!(FAllowSendPEP = Options::node(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO).value().toBool()))
 		{
 			onStopPublishing();
 		}
@@ -341,9 +355,9 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 			}
 		}
 	}
-	else if (ANode.path() == OPV_UT_NOT_ALLOW_SEND_URL_INFO)
+	else if (ANode.path() == OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO)
 	{
-		FAllowSendURLInPEP = !Options::node(OPV_UT_NOT_ALLOW_SEND_URL_INFO).value().toBool();
+		FAllowSendURLInPEP = !Options::node(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO).value().toBool();
 	}
 #endif
 }
@@ -367,13 +381,8 @@ QList<int> UserTuneHandler::rosterDataTypes() const
 
 QVariant UserTuneHandler::rosterData(const IRosterIndex *AIndex, int ARole) const
 {
-	if(ARole == RDR_USERTUNE)
-	{
-		Jid streamJid = AIndex->data(RDR_STREAM_JID).toString();
-		Jid senderJid = AIndex->data(RDR_PREP_BARE_JID).toString();
-		if (FContactTune[streamJid].contains(senderJid.pBare()))
-			return getTagFormated(streamJid, senderJid);
-	}
+	Q_UNUSED(AIndex);
+	Q_UNUSED(ARole)
 	return QVariant();
 }
 
@@ -383,21 +392,6 @@ bool UserTuneHandler::setRosterData(IRosterIndex *AIndex, int ARole, const QVari
 	Q_UNUSED(ARole);
 	Q_UNUSED(AValue);
 	return false;
-}
-
-QList<quint32> UserTuneHandler::rosterLabels(int AOrder, const IRosterIndex *AIndex) const
-{
-	QList<quint32> labels;
-	if (AOrder == RLHO_USERTUNE && FTuneLabelVisible && !AIndex->data(RDR_USERTUNE).isNull()) {
-		labels.append(FUserTuneLabelId);
-	}
-	return labels;
-}
-
-AdvancedDelegateItem UserTuneHandler::rosterLabel(int AOrder, quint32 ALabelId, const IRosterIndex *AIndex) const
-{
-	Q_UNUSED(AOrder); Q_UNUSED(AIndex);
-	return FRostersViewPlugin->rostersView()->registeredLabel(ALabelId);
 }
 
 #ifdef Q_WS_X11
@@ -511,7 +505,7 @@ void UserTuneHandler::onNotificationRemoved(int ANotifyId)
 void UserTuneHandler::onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AIndexes, quint32 ALabelId, Menu *AMenu)
 {
 	QList<int> indexTypes = QList<int>() << RIT_CONTACT << RIT_STREAM_ROOT;
-	if (ALabelId == AdvancedDelegateItem::DisplayId && AIndexes.count() == 1 && indexTypes.contains(AIndexes.first()->type()))
+	if (ALabelId==AdvancedDelegateItem::DisplayId && AIndexes.count()==1 && indexTypes.contains(AIndexes.first()->type()))
 	{
 		QString song = getTagFormated(AIndexes.first()->data(RDR_STREAM_JID).toString(), AIndexes.first()->data(RDR_PREP_BARE_JID).toString());
 		if (!song.isEmpty())
@@ -541,20 +535,20 @@ void UserTuneHandler::updateFetchers()
 		FMetaDataFetcher = NULL;
 	}
 
-	switch (Options::node(OPV_UT_PLAYER_VER).value().toUInt()) {
+	switch (Options::node(OPV_USERTUNE_PLAYER_VER).value().toUInt()) {
 #ifdef Q_WS_X11
 	case FetcherVer::mprisV1:
-		FMetaDataFetcher = new MprisFetcher1(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
+		FMetaDataFetcher = new MprisFetcher1(this, Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 		break;
 	case FetcherVer::mprisV2:
-		FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_UT_PLAYER_NAME).value().toString());
+		FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 		break;
 #elif Q_WS_WIN
 	// for Windows players...
 #endif
 	default:
 #ifndef QT_NO_DEBUG
-		qWarning() << "Not supported fetcher version: " << Options::node(OPV_UT_PLAYER_VER).value().toUInt();
+		qWarning() << "Not supported fetcher version: " << Options::node(OPV_USERTUNE_PLAYER_VER).value().toUInt();
 #endif
 		break;
 	}
@@ -724,26 +718,39 @@ void UserTuneHandler::onStopPublishing()
 /*
 	set music icon to main accaunt
 */
-void UserTuneHandler::onSetMainLabel(IXmppStream *AXmppStream)
+void UserTuneHandler::onStreamOpened(IXmppStream *AXmppStream)
 {
 	if (FRostersViewPlugin)
 	{
 		IRostersModel *model = FRostersViewPlugin->rostersView()->rostersModel();
 		IRosterIndex *index = model!=NULL ? model->streamRoot(AXmppStream->streamJid()) : NULL;
 		if (index!=NULL)
-			FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, index);
+			FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
 	}
 }
 
-void UserTuneHandler::onUnsetMainLabel(IXmppStream *AXmppStream)
+void UserTuneHandler::onLabelsEnabled(const Jid &streamJid)
+{
+	if (FRostersViewPlugin)
+	{
+		IRostersModel *model = FRostersViewPlugin->rostersView()->rostersModel();
+		IRosterIndex *index = model!=NULL ? model->streamRoot(streamJid) : NULL;
+		if (index!=NULL)
+			FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+
+		updateDataHolder(streamJid, Jid());
+	}
+}
+
+void UserTuneHandler::onStreamClosed(IXmppStream *AXmppStream)
 {
 	Jid streamJid = AXmppStream->streamJid();
 	FContactTune.remove(streamJid);
 	if(FRostersViewPlugin && FRostersModel)
 	{
-		IRosterIndex *index = FRostersModel->streamRoot(AXmppStream->streamJid());
-		if (index!=NULL)
-			FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId, index);
+		IRosterIndex *index = FRostersModel->streamRoot(streamJid);
+		FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+		emit rosterDataChanged(index, RDR_USERTUNE);
 	}
 }
 
@@ -761,32 +768,36 @@ void UserTuneHandler::setContactTune(const Jid &streamJid, const Jid &senderJid,
 		IRoster *roster = FRosterPlugin!=NULL ? FRosterPlugin->findRoster(streamJid) : NULL;
 		if((roster!=NULL && roster->rosterItem(senderJid).isValid) || streamJid.pBare() == senderJid.pBare())
 		{
-			if (!song.isEmpty())
+			if (!song.title.isEmpty())
 			{
 				FContactTune[streamJid].insert(senderJid.pBare(),song);
 				onShowNotification(streamJid, senderJid);
 			}
 			else
-			{
 				FContactTune[streamJid].remove(senderJid.pBare());
-			}
 		}
 	}
-	updateDataHolder(senderJid);
+	if(FTuneLabelVisible)
+		updateDataHolder(streamJid, senderJid);
 }
-void UserTuneHandler::updateDataHolder(const Jid &senderJid)
+
+void UserTuneHandler::updateDataHolder(const Jid &streamJid, const Jid &senderJid)
 {
-	if(FRostersModel)
+	if(FRostersViewPlugin && FRostersModel)
 	{
 		QMultiMap<int,QVariant> findData;
 		foreach(int type, rosterDataTypes())
 			findData.insert(RDR_TYPE,type);
 		if (!senderJid.isEmpty())
 			findData.insert(RDR_PREP_BARE_JID,senderJid.pBare());
-		QList<IRosterIndex *> indexes = FRostersModel->rootIndex()->findChilds(findData,true);
+		QList<IRosterIndex *> indexes = FRostersModel->streamRoot(streamJid)->findChilds(findData,true);
 		foreach (IRosterIndex *index, indexes)
 		{
-			emit rosterDataChanged(index,RDR_USERTUNE);
+			if(FContactTune[streamJid].contains(index->data(RDR_PREP_BARE_JID).toString()))
+				FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
+			else
+				FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId,index);
+			emit rosterDataChanged(index, RDR_USERTUNE);
 		}
 	}
 }
@@ -818,7 +829,7 @@ QString UserTuneHandler::getTagFormated(const UserTuneData &AUserData) const
 
 void UserTuneHandler::onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int, QString> &AToolTips)
 {
-	if (ALabelId==AdvancedDelegateItem::DisplayId || ALabelId==FUserTuneLabelId)
+	if ((ALabelId==AdvancedDelegateItem::DisplayId && rosterDataTypes().contains(AIndex->type())) || ALabelId == FUserTuneLabelId)
 	{
 		Jid streamJid = AIndex->data(RDR_FULL_JID).toString();
 		Jid senderJid = AIndex->data(RDR_PREP_BARE_JID).toString();

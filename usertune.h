@@ -51,7 +51,6 @@ class UserTuneHandler :
 		public IPlugin,
 		public IOptionsHolder,
 		public IRosterDataHolder,
-		public IRostersLabelHolder,
 		public IPEPHandler
 		#ifdef Q_WS_X11
 		,
@@ -61,7 +60,7 @@ class UserTuneHandler :
 {
 	Q_OBJECT
 #ifdef Q_WS_X11
-	Q_INTERFACES(IPlugin IOptionsHolder IRosterDataHolder IRostersLabelHolder IPEPHandler IMessageEditor)
+	Q_INTERFACES(IPlugin IOptionsHolder IRosterDataHolder IPEPHandler IMessageEditor)
 #else
 	Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 #endif
@@ -97,9 +96,6 @@ public:
 	virtual QList<int> rosterDataTypes() const;
 	virtual QVariant rosterData(const IRosterIndex *AIndex, int ARole) const;
 	virtual bool setRosterData(IRosterIndex *AIndex, int ARole, const QVariant &AValue);
-	//IRostersLabelHolder
-	virtual QList<quint32> rosterLabels(int AOrder, const IRosterIndex *AIndex) const;
-	virtual AdvancedDelegateItem rosterLabel(int AOrder, quint32 ALabelId, const IRosterIndex *AIndex) const;
 	//IPEPHandler
 	virtual bool processPEPEvent(const Jid &streamJid, const Stanza &AStanza);
 
@@ -123,17 +119,17 @@ protected slots:
 	void onOptionsChanged(const OptionsNode &ANode);
 	void onOptionsOpened();
 	void onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AIndexes, quint32 ALabelId, Menu *AMenu);
-	void onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int,QString> &AToolTips);
-	void onSetMainLabel(IXmppStream *);
+	void onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int, QString> &AToolTips);
+	void onStreamOpened(IXmppStream *);
+	void onStreamClosed(IXmppStream *);
 	void onShowNotification(const Jid &streamJid, const Jid &senderJid);
-	void onUnsetMainLabel(IXmppStream *);
 	void onApplicationQuit();
 
 protected:
+	void onLabelsEnabled(const Jid &streamJid);
 	void setContactTune(const Jid &streamJid, const Jid &contactJid, const UserTuneData &song);
-
 	//IRosterDataHolder
-	void updateDataHolder(const Jid &senderJid);
+	void updateDataHolder(const Jid &streamJid, const Jid &senderJid);
 
 	static const QString secondsToString(unsigned short sec)
 	{

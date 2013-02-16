@@ -148,7 +148,7 @@ void MprisFetcher2::onPlayerNameChange(const QString &AName)
     }
 
 	FPlayerInterface = createPlayerInterface();
-    Q_ASSERT(FPlayerInterface && FPlayerInterface->isValid());
+	Q_ASSERT(FPlayerInterface && FPlayerInterface->isValid());
     if (FPlayerInterface->isValid()) {
         updateStatus();
         connectToBus();
