@@ -35,13 +35,21 @@
 //Option Widget Order
 #define OWO_USERTUNE 500
 
+//Roster Data Holder Orders
+#define RDHO_USERTUNE 1000
+
 //Roster Label ID
-#define RLID_USERTUNE AdvancedDelegateItem::makeId(AdvancedDelegateItem::MiddleCenter,	128, AdvancedDelegateItem::AlignRightOrderMask | 444)
+#define RLID_USERTUNE AdvancedDelegateItem::makeId(AdvancedDelegateItem::MiddleCenter,\
+												   128,\
+												   AdvancedDelegateItem::AlignRightOrderMask | 444)
 
 //Roster ToolTip Order
 #define RTTO_USERTUNE 910
 
 #define RLHO_USERTUNE 500
+
+#define RDR_USERTUNE 450
+#define RDR_TUNE_NAME 452
 
 #endif //DEF_DEFINITIONS_H
 

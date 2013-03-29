@@ -91,11 +91,9 @@ public:
 	//IOptionsHolder
 	virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
 	//IRosterDataHolder
-	virtual int rosterDataOrder() const;
-	virtual QList<int> rosterDataRoles() const;
-	virtual QList<int> rosterDataTypes() const;
-	virtual QVariant rosterData(const IRosterIndex *AIndex, int ARole) const;
-	virtual bool setRosterData(IRosterIndex *AIndex, int ARole, const QVariant &AValue);
+	virtual QList<int> rosterDataRoles(int AOrder) const;
+	virtual QVariant rosterData(int AOrder, const IRosterIndex *AIndex, int ARole) const;
+	virtual bool setRosterData(int AOrder, const QVariant &AValue, IRosterIndex *AIndex, int ARole);
 	//IPEPHandler
 	virtual bool processPEPEvent(const Jid &streamJid, const Stanza &AStanza);
 
@@ -118,10 +116,12 @@ protected slots:
 	void onNotificationRemoved(int ANotifyId);
 	void onOptionsChanged(const OptionsNode &ANode);
 	void onOptionsOpened();
+	//IRostersView
 	void onRosterIndexClipboardMenu(const QList<IRosterIndex *> &AIndexes, quint32 ALabelId, Menu *AMenu);
-	void onRosterIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int, QString> &AToolTips);
-	void onStreamOpened(IXmppStream *);
-	void onStreamClosed(IXmppStream *);
+	void onRostersViewIndexToolTips(IRosterIndex *AIndex, quint32 ALabelId, QMap<int, QString> &AToolTips);
+	//IXmppStreams
+	void onSetMainLabel(IXmppStream *);
+	void onUnsetMainLabel(IXmppStream *);
 	void onShowNotification(const Jid &streamJid, const Jid &senderJid);
 	void onApplicationQuit();
 
