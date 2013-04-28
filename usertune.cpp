@@ -41,8 +41,9 @@
 
 #define TUNE_PROTOCOL_URL "http://jabber.org/protocol/tune"
 #define TUNE_NOTIFY_PROTOCOL_URL "http://jabber.org/protocol/tune+notify"
-
-#define PEP_SEND_DELAY 5*1000 // delay befo send pep to prevent a large number of updates when a user is skipping through tracks
+// Delay befo send pep to prevent a large number of
+// updates when a user is skipping through tracks
+#define PEP_SEND_DELAY 5*1000
 
 static const QList<int> RosterKinds = QList<int>() << RIK_CONTACT << RIK_CONTACTS_ROOT << RIK_STREAM_ROOT;
 
@@ -78,7 +79,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = QLatin1String("1.0.4");
+	APluginInfo->version = QLatin1String("1.0.5");
 	APluginInfo->author = QLatin1String("Crying Angel");
 	APluginInfo->homePage = QLatin1String("http://www.vacuum-im.org");
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -418,7 +419,7 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 			}
 			Q_ASSERT(widget);
 			if (widget) {
-				widget->clearEditor();
+				widget->document()->clear();
 			}
 		}
 	}
@@ -678,7 +679,7 @@ void UserTuneHandler::onSetMainLabel(IXmppStream *AXmppStream)
 	if (FRostersViewPlugin) {
 		IRostersModel *model = FRostersViewPlugin->rostersView()->rostersModel();
 		IRosterIndex *index = model!=NULL ? model->streamIndex(AXmppStream->streamJid()) : NULL;
-		if (index!=NULL)
+		if (index != NULL)
 			FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId,index);
 	}
 }
