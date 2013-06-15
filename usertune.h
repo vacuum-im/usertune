@@ -65,7 +65,7 @@ class UserTuneHandler :
 	Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
 #endif
 public:
-	explicit UserTuneHandler();
+	UserTuneHandler();
 	~UserTuneHandler();
 	//IMessageEditor
 #ifdef Q_WS_X11
@@ -99,9 +99,9 @@ public:
 
 signals:
 	//IRosterDataHolder
-	void rosterDataChanged(IRosterIndex *AIndex = NULL, int ARole = 0);
+	void rosterDataChanged(IRosterIndex *AIndex = nullptr, int ARole = 0);
 	//IRostersLabelHolder
-	void rosterLabelChanged(quint32 ALabelId, IRosterIndex *AIndex = NULL);
+	void rosterLabelChanged(quint32 ALabelId, IRosterIndex *AIndex = nullptr);
 
 protected slots:
 #ifdef Q_WS_X11
