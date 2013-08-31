@@ -81,7 +81,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = QLatin1String("1.0.6");
+	APluginInfo->version = QLatin1String("1.0.7");
 	APluginInfo->author = QLatin1String("Crying Angel");
 	APluginInfo->homePage = QLatin1String("http://www.vacuum-im.org");
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -161,11 +161,12 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	// player manage (/play, /pause etc command)
 	plugin = APluginManager->pluginInterface("IMessageProcessor").value(0, nullptr);
 	Q_ASSERT(plugin);
-	if (plugin)	{
+	if (plugin) {
 		IMessageProcessor *messageProcessor = qobject_cast<IMessageProcessor *>(plugin->instance());
 		Q_ASSERT(messageProcessor);
-		if (messageProcessor)
+		if (messageProcessor) {
 			messageProcessor->insertMessageEditor(MEO_USERTUNE, this);
+		}
 	}
 
 	plugin = APluginManager->pluginInterface("IMessageWidgets").value(0, nullptr);
@@ -366,64 +367,56 @@ bool UserTuneHandler::setRosterData(int AOrder, const QVariant &AValue, IRosterI
 // for player manage
 bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection)
 {
+	Q_UNUSED(AOrder);
 	Q_UNUSED(AStreamJid);
 	Q_ASSERT(FMetaDataFetcher);
 
-	if (!AMessage.body().startsWith('/')) {
+	if (!FMetaDataFetcher || ADirection != IMessageProcessor::MessageOut || !AMessage.body().startsWith('/')) {
 		return false;
 	}
 
 	bool breakNextCheck = false;
 
-	if (FMetaDataFetcher && AOrder == MEO_USERTUNE && ADirection == IMessageProcessor::MessageOut) {
-		bool clearWidget = false;
-#if QT_VERSION >= 0x040800
-		QStringRef body = AMessage.body().midRef(1);
-#else
-		QString body = AMessage.body().mid(1);
-#endif
+	if (AMessage.body().startsWith(QLatin1String("/play"), Qt::CaseInsensitive) ||
+			AMessage.body().startsWith(QLatin1String("/pause"), Qt::CaseInsensitive)) {
+		FMetaDataFetcher->playerPlay();
+		breakNextCheck = true;
+	}
+	else if (AMessage.body().startsWith(QLatin1String("/stop"), Qt::CaseInsensitive)) {
+		FMetaDataFetcher->playerStop();
+		breakNextCheck = true;
+	}
+	else if (AMessage.body().startsWith(QLatin1String("/next"), Qt::CaseInsensitive)) {
+		FMetaDataFetcher->playerNext();
+		breakNextCheck = true;
+	}
+	else if (AMessage.body().startsWith(QLatin1String("/prev"), Qt::CaseInsensitive)) {
+		FMetaDataFetcher->playerPrev();
+		breakNextCheck = true;
+	}
+	else if (AMessage.body().startsWith(QLatin1String("/np"), Qt::CaseInsensitive)) {
+		AMessage.setBody(getTagFormated(FUserTuneData).prepend(ACTION_PREPEND_TEXT));
+		breakNextCheck = false;
+	} else {
+		return false;
+	}
 
-		if (body.startsWith(QLatin1String("play"), Qt::CaseInsensitive) ||
-				body.startsWith(QLatin1String("pause"), Qt::CaseInsensitive)) {
-			FMetaDataFetcher->playerPlay();
-			breakNextCheck = clearWidget = true;
-		}
-		else if (body.startsWith(QLatin1String("stop"), Qt::CaseInsensitive)) {
-			FMetaDataFetcher->playerStop();
-			breakNextCheck = clearWidget = true;
-		}
-		else if (body.startsWith(QLatin1String("next"), Qt::CaseInsensitive)) {
-			FMetaDataFetcher->playerNext();
-			breakNextCheck = clearWidget = true;
-		}
-		else if (body.startsWith(QLatin1String("prev"), Qt::CaseInsensitive)) {
-			FMetaDataFetcher->playerPrev();
-			breakNextCheck = clearWidget = true;
-		}
-		else if (body.startsWith(QLatin1String("np"), Qt::CaseInsensitive)) {
-			AMessage.setBody(getTagFormated(FUserTuneData).prepend(ACTION_PREPEND_TEXT));
-			breakNextCheck = !(clearWidget = true);
-		}
+	IMessageEditWidget *widget;
 
-		if (clearWidget) {
-			IMessageEditWidget *widget;
-
-			switch (AMessage.type()) {
-			case Message::Chat:
-				widget = FMessageWidgets->findChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
-				break;
-			case Message::GroupChat:
-				widget = FMultiUserChatPlugin->findMultiChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
-				break;
-			default:
-				widget = nullptr;
-				break;
-			}
-			Q_ASSERT(widget);
-			if (widget) {
-				widget->document()->clear();
-			}
-		}
+	switch (AMessage.type()) {
+		case Message::Chat:
+			widget = FMessageWidgets->findChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
+			break;
+		case Message::GroupChat:
+			widget = FMultiUserChatPlugin->findMultiChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
+			break;
+		default:
+			widget = nullptr;
+			break;
+	}
+	Q_ASSERT(widget);
+	if (widget) {
+		widget->document()->clear();
 	}
 
 	return breakNextCheck;
@@ -489,7 +482,6 @@ void UserTuneHandler::onCopyToClipboardActionTriggered(bool)
 	}
 }
 
-#ifdef Q_WS_X11
 void UserTuneHandler::updateFetchers()
 {
 	if (FMetaDataFetcher) {
@@ -524,7 +516,7 @@ void UserTuneHandler::updateFetchers()
 		onStopPublishing();
 	}
 }
-#endif
+
 bool UserTuneHandler::processPEPEvent(const Jid &streamJid, const Stanza &AStanza)
 {
 	QDomElement replyElem = AStanza.document().firstChildElement(QLatin1String("message"));
@@ -597,7 +589,9 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
 		FTimer.start();
 	}
 }
+#endif
 
+#ifdef Q_WS_X11
 void UserTuneHandler::onSendPep()
 {
 	QDomDocument doc(QLatin1String(""));
@@ -633,14 +627,18 @@ void UserTuneHandler::onSendPep()
 		FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
 	}
 }
+#endif
 
+#ifdef Q_WS_X11
 void UserTuneHandler::onPlayerSatusChanged(PlayerStatus AStatus)
 {
 	if (AStatus.Play == PlaybackStatus::Stopped) {
 		onStopPublishing();
 	}
 }
+#endif
 
+#ifdef Q_WS_X11
 void UserTuneHandler::onStopPublishing()
 {
 	if (FTimer.isActive()) {

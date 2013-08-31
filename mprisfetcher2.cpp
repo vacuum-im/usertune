@@ -66,7 +66,7 @@ QDBusInterface* MprisFetcher2::createPlayerInterface()
 							  this);
 }
 
-void MprisFetcher2::playerPlay()
+void MprisFetcher2::playerPlay() const
 {
 	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
 		return;
@@ -76,7 +76,7 @@ void MprisFetcher2::playerPlay()
 	Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
-void MprisFetcher2::playerStop()
+void MprisFetcher2::playerStop() const
 {
 	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
 		return;
@@ -86,7 +86,7 @@ void MprisFetcher2::playerStop()
 	Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
-void MprisFetcher2::playerPrev()
+void MprisFetcher2::playerPrev() const
 {
 	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
 		return;
@@ -96,7 +96,7 @@ void MprisFetcher2::playerPrev()
 	Q_ASSERT(FPlayerInterface->lastError().type() == QDBusError::NoError);
 }
 
-void MprisFetcher2::playerNext()
+void MprisFetcher2::playerNext() const
 {
 	if (!FPlayerInterface || !FPlayerInterface->isValid()) {
 		return;

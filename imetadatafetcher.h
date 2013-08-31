@@ -15,7 +15,7 @@ class IMetaDataFetcher : public QObject
 {
 	Q_OBJECT
 public:
-	explicit IMetaDataFetcher(QObject *parent);
+	IMetaDataFetcher(QObject *parent);
 	virtual ~IMetaDataFetcher();
 
 	virtual void updateStatus() = 0;
@@ -26,10 +26,10 @@ signals:
 	void trackChanged(UserTuneData);
 
 public slots:
-	virtual void playerPlay() = 0;
-	virtual void playerStop() = 0;
-	virtual void playerPrev() = 0;
-	virtual void playerNext() = 0;
+	virtual void playerPlay() const = 0;
+	virtual void playerStop() const = 0;
+	virtual void playerPrev() const = 0;
+	virtual void playerNext() const = 0;
 	virtual void onPlayerNameChange(const QString &) = 0;
 
 protected slots:

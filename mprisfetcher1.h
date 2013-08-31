@@ -20,10 +20,10 @@ signals:
 	void trackChanged(UserTuneData);
 
 public slots:
-	virtual void playerPlay();
-	virtual void playerStop();
-	virtual void playerPrev();
-	virtual void playerNext();
+	virtual void playerPlay() const;
+	virtual void playerStop() const;
+	virtual void playerPrev() const;
+	virtual void playerNext() const;
 	virtual void onPlayerNameChange(const QString &);
 
 private slots:
