@@ -3,9 +3,6 @@
 
 #include <utils/advanceditemdelegate.h>
 
-//Namespaces
-//#define NS_something "somesing"
-
 //MessageEditorOrders
 #define MEO_USERTUNE 500
 
@@ -41,12 +38,10 @@
 //Roster Label ID
 #define RLID_USERTUNE AdvancedDelegateItem::makeId(AdvancedDelegateItem::MiddleCenter,\
 												   128,\
-												   AdvancedDelegateItem::AlignRightOrderMask | 444)
+												   AdvancedDelegateItem::AlignRightOrderMask | 300)
 
 //Roster ToolTip Order
 #define RTTO_USERTUNE 910
-
-#define RLHO_USERTUNE 500
 
 #define RDR_USERTUNE 450
 #define RDR_TUNE_NAME 452
