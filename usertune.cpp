@@ -293,17 +293,17 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 {
 	if (ANode.path() == OPV_USERTUNE_SHOW_ROSTER_LABEL) {
 		FTuneLabelVisible = ANode.value().toBool();
-		if(FTuneLabelVisible) {
-			if(FUserTuneLabelId == 0) {
+		if (FTuneLabelVisible) {
+			if (FUserTuneLabelId == 0) {
 				AdvancedDelegateItem notifyLabel(RLID_USERTUNE);
 				notifyLabel.d->kind = AdvancedDelegateItem::CustomData;
 				notifyLabel.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
 				FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(notifyLabel);
-				foreach (Jid streamJid, FRostersModel->streams()) {
+				foreach (const Jid streamJid, FRostersModel->streams()) {
 					onLabelsEnabled(streamJid);
 				}
 			}
-		} else if(FUserTuneLabelId != 0) {
+		} else if (FUserTuneLabelId != 0) {
 			FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId);
 			FUserTuneLabelId = 0;
 		}
@@ -439,7 +439,7 @@ void UserTuneHandler::onShowNotification(const Jid &streamJid, const Jid &sender
 			notify.data.insert(NDR_POPUP_TITLE,FNotifications->contactName(streamJid, senderJid));
 			notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(senderJid));
 
-			notify.data.insert(NDR_POPUP_HTML,Qt::escape(getTagFormated(streamJid, senderJid)));
+			notify.data.insert(NDR_POPUP_TEXT,Qt::escape(getTagFormated(streamJid, senderJid)));
 
 			FNotifies.insert(FNotifications->appendNotification(notify),senderJid);
 		}

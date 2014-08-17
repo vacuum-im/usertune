@@ -6,19 +6,20 @@
 #include <interfaces/ioptionsmanager.h>
 
 namespace Ui {
-    class UserTuneOptions;
+	class UserTuneOptions;
 }
 
-class UserTuneOptions : public QWidget,
-        public IOptionsWidget
+class UserTuneOptions :
+		public QWidget,
+		public IOptionsWidget
 {
-    Q_OBJECT
-    Q_INTERFACES(IOptionsWidget)
-    
+	Q_OBJECT
+	Q_INTERFACES(IOptionsWidget)
+
 public:
-    explicit UserTuneOptions(QWidget *AParent);
-    ~UserTuneOptions();
-    virtual QWidget* instance() { return this; }
+	explicit UserTuneOptions(QWidget *AParent);
+	~UserTuneOptions();
+	virtual QWidget* instance() { return this; }
 
 signals:
 	void modified();
@@ -26,15 +27,15 @@ signals:
 	void childReset();
 
 public slots:
-    virtual void apply();
-    virtual void reset();
+	virtual void apply();
+	virtual void reset();
 
 private slots:
-    void onRefreshPlayers();
-    void onVersionChange(int);
+	void onRefreshPlayers();
+	void onVersionChange(int);
 
 private:
-    Ui::UserTuneOptions *ui;
+	Ui::UserTuneOptions *ui;
 };
 
 #endif // USERTUNEOPTIONS_H

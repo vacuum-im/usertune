@@ -1,5 +1,5 @@
-//   Plugin popup notifications for vacuum-im (c) Crying Angel, 2012
-//   This plugin uses DBus to show notifications.
+//   Plugin to allows hadle user tunes for vacuum-im (c) Crying Angel, 2012
+//   This plugin uses DBus to get metadata.
 
 //   This library is free software; you can redistribute it and/or
 //   modify it under the terms of the GNU Library General Public
