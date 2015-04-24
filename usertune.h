@@ -1,4 +1,4 @@
-//   Plugin to allows hadle user tunes for vacuum-im (c) Crying Angel, 2012
+//   Plugin to allows hadle user tunes for vacuum-im (c) Crying Angel, 2015
 //   This plugin uses DBus to get metadata.
 
 //   This library is free software; you can redistribute it and/or
@@ -25,12 +25,12 @@
 #include <interfaces/ioptionsmanager.h>
 #include <interfaces/ipepmanager.h>
 #include <interfaces/ipluginmanager.h>
-#include <interfaces/ipresence.h>
-#include <interfaces/iroster.h>
+#include <interfaces/ipresencemanager.h>
+#include <interfaces/irostermanager.h>
 #include <interfaces/irostersmodel.h>
 #include <interfaces/irostersview.h>
 #include <interfaces/iservicediscovery.h>
-#include <interfaces/ixmppstreams.h>
+#include <interfaces/ixmppstreammanager.h>
 #ifdef Q_WS_X11
 #include <interfaces/imessageprocessor.h>
 #include <interfaces/imessagewidgets.h>
@@ -48,7 +48,7 @@
 class UserTuneHandler :
 		public QObject,
 		public IPlugin,
-		public IOptionsHolder,
+		public IOptionsDialogHolder,
 		public IRosterDataHolder,
 		public IPEPHandler
 		#ifdef Q_WS_X11
@@ -59,9 +59,9 @@ class UserTuneHandler :
 {
 	Q_OBJECT
 #ifdef Q_WS_X11
-	Q_INTERFACES(IPlugin IOptionsHolder IRosterDataHolder IPEPHandler IMessageEditor)
+	Q_INTERFACES(IPlugin IOptionsDialogHolder IRosterDataHolder IPEPHandler IMessageEditor)
 #else
-	Q_INTERFACES(IPlugin IOptionsHolder IPEPHandler)
+	Q_INTERFACES(IPlugin IOptionsDialogHolder IPEPHandler)
 #endif
 public:
 	UserTuneHandler();
@@ -88,7 +88,7 @@ public:
 		return true;
 	}
 	//IOptionsHolder
-	virtual QMultiMap<int, IOptionsWidget *> optionsWidgets(const QString &ANodeId, QWidget *AParent);
+	virtual QMultiMap<int, IOptionsDialogWidget *> optionsDialogWidgets(const QString &ANodeId, QWidget *AParent);
 	//IRosterDataHolder
 	virtual QList<int> rosterDataRoles(int AOrder) const;
 	virtual QVariant rosterData(int AOrder, const IRosterIndex *AIndex, int ARole) const;
@@ -146,17 +146,17 @@ private:
 	INotifications *FNotifications;
 	IOptionsManager *FOptionsManager;
 	IPEPManager *FPEPManager;
-	IPresencePlugin *FPresencePlugin;
+	IPresenceManager *FPresenceManager;
 	IRoster *FRoster;
-	IRosterPlugin *FRosterPlugin;
+	IRosterManager *FRosterManager;
 	IRostersModel *FRostersModel;
 	IRostersViewPlugin *FRostersViewPlugin;
 	IServiceDiscovery *FServiceDiscovery;
-	IXmppStreams *FXmppStreams;
+	IXmppStreamManager *FXmppStreamManager;
 #ifdef Q_WS_X11
 	IMessageWidgets *FMessageWidgets;
 	IMetaDataFetcher *FMetaDataFetcher;
-	IMultiUserChatPlugin *FMultiUserChatPlugin;
+	IMultiUserChatManager *FMultiUserChatManager;
 	UserTuneData FUserTuneData;
 	QTimer FTimer;
 #endif

@@ -11,10 +11,10 @@ namespace Ui {
 
 class UserTuneOptions :
 		public QWidget,
-		public IOptionsWidget
+		public IOptionsDialogWidget
 {
 	Q_OBJECT
-	Q_INTERFACES(IOptionsWidget)
+	Q_INTERFACES(IOptionsDialogWidget)
 
 public:
 	explicit UserTuneOptions(QWidget *AParent);

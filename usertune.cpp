@@ -54,15 +54,15 @@ UserTuneHandler::UserTuneHandler() :
 	FOptionsManager(nullptr),
 	FPEPManager(nullptr),
 	FRoster(nullptr),
-	FRosterPlugin(nullptr),
+	FRosterManager(nullptr),
 	FRostersModel(nullptr),
 	FRostersViewPlugin(nullptr),
 	FServiceDiscovery(nullptr),
-	FXmppStreams(nullptr)
+	FXmppStreamManager(nullptr)
   #ifdef Q_WS_X11
 	,FMessageWidgets(nullptr),
 	FMetaDataFetcher(nullptr),
-	FMultiUserChatPlugin(nullptr)
+	FMultiUserChatManager(nullptr)
   #endif
 {
 #ifdef Q_WS_X11
@@ -81,7 +81,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = QLatin1String("1.0.7");
+	APluginInfo->version = QLatin1String("1.0.10");
 	APluginInfo->author = QLatin1String("Crying Angel");
 	APluginInfo->homePage = QLatin1String("http://www.vacuum-im.org");
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -107,21 +107,21 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	plugin = APluginManager->pluginInterface("IXmppStreams").value(0, nullptr);
 	if (!plugin) return false;
 
-	FXmppStreams = qobject_cast<IXmppStreams *>(plugin->instance());
-	connect(FXmppStreams->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
-	connect(FXmppStreams->instance(), SIGNAL(closed(IXmppStream *)), this, SLOT(onUnsetMainLabel(IXmppStream*)));
+	FXmppStreamManager = qobject_cast<IXmppStreamManager *>(plugin->instance());
+	connect(FXmppStreamManager->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
+	connect(FXmppStreamManager->instance(), SIGNAL(closed(IXmppStream *)), this, SLOT(onUnsetMainLabel(IXmppStream*)));
 
-	int streams_size = FXmppStreams->xmppStreams().size();
+	int streams_size = FXmppStreamManager->xmppStreams().size();
 	for (int i = 0; i < streams_size; i++) {
-		connect(FXmppStreams->xmppStreams().at(i)->instance(), SIGNAL(aboutToClose()), this, SLOT(onStopPublishing()));
+		connect(FXmppStreamManager->xmppStreams().at(i)->instance(), SIGNAL(aboutToClose()), this, SLOT(onStopPublishing()));
 	}
 
 	plugin = APluginManager->pluginInterface("IPresencePlugin").value(0, nullptr);
 	if (plugin) {
-		FPresencePlugin = qobject_cast<IPresencePlugin *>(plugin->instance());
+		FPresenceManager = qobject_cast<IPresenceManager *>(plugin->instance());
 
-		if (FPresencePlugin)	{
-			connect(FPresencePlugin->instance(),
+		if (FPresenceManager)	{
+			connect(FPresenceManager->instance(),
 					SIGNAL(contactStateChanged(const Jid &, const Jid &, bool)),
 					SLOT(onContactStateChanged(const Jid &, const Jid &, bool)));
 		}
@@ -135,7 +135,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	plugin = APluginManager->pluginInterface("IRosterPlugin").value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin)	{
-		FRosterPlugin = qobject_cast<IRosterPlugin *>(plugin->instance());
+		FRosterManager = qobject_cast<IRosterManager *>(plugin->instance());
 	}
 
 	plugin = APluginManager->pluginInterface("IRostersModel").value(0, nullptr);
@@ -178,7 +178,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	plugin = APluginManager->pluginInterface("IMultiUserChatPlugin").value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
-		FMultiUserChatPlugin = qobject_cast<IMultiUserChatPlugin *>(plugin->instance());
+		FMultiUserChatManager = qobject_cast<IMultiUserChatManager *>(plugin->instance());
 	}
 #endif
 	plugin = APluginManager->pluginInterface("INotifications").value(0, nullptr);
@@ -257,15 +257,15 @@ bool UserTuneHandler::initSettings()
 	if (FOptionsManager) {
 		IOptionsDialogNode dnode = { ONO_USERTUNE, OPN_USERTUNE, tr("User Tune"), MNI_USERTUNE_MUSIC };
 		FOptionsManager->insertOptionsDialogNode(dnode);
-		FOptionsManager->insertOptionsHolder(this);
+		FOptionsManager->insertOptionsDialogHolder(this);
 	}
 
 	return true;
 }
 
-QMultiMap<int, IOptionsWidget *> UserTuneHandler::optionsWidgets(const QString &ANodeId, QWidget *AParent)
+QMultiMap<int, IOptionsDialogWidget *> UserTuneHandler::optionsDialogWidgets(const QString &ANodeId, QWidget *AParent)
 {
-	QMultiMap<int, IOptionsWidget *> widgets;
+	QMultiMap<int, IOptionsDialogWidget *> widgets;
 	if (FOptionsManager && ANodeId == OPN_USERTUNE)	{
 #ifdef Q_WS_X11
 		widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
@@ -371,7 +371,7 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 	Q_UNUSED(AStreamJid);
 	Q_ASSERT(FMetaDataFetcher);
 
-	if (!FMetaDataFetcher || ADirection != IMessageProcessor::MessageOut || !AMessage.body().startsWith('/')) {
+	if (!FMetaDataFetcher || ADirection != IMessageProcessor::DirectionOut || !AMessage.body().startsWith('/')) {
 		return false;
 	}
 
@@ -408,7 +408,7 @@ bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Messag
 			widget = FMessageWidgets->findChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
 			break;
 		case Message::GroupChat:
-			widget = FMultiUserChatPlugin->findMultiChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
+			widget = FMultiUserChatManager->findMultiChatWindow(AStreamJid,AMessage.stanza().to())->editWidget();
 			break;
 		default:
 			widget = nullptr;
@@ -620,10 +620,10 @@ void UserTuneHandler::onSendPep()
 	qDebug() << doc.toString();
 #endif
 	Jid streamJid;
-	int streams_size = FXmppStreams->xmppStreams().size();
+	int streams_size = FXmppStreamManager->xmppStreams().size();
 
 	for (int i = 0; i < streams_size; i++) {
-		streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
+		streamJid = FXmppStreamManager->xmppStreams().at(i)->streamJid();
 		FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
 	}
 }
@@ -660,10 +660,10 @@ void UserTuneHandler::onStopPublishing()
 		FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
 		FContactTune.remove(streamJid);
 	} else {
-		int streams_size = FXmppStreams->xmppStreams().size();
+		int streams_size = FXmppStreamManager->xmppStreams().size();
 
 		for (int i = 0; i < streams_size; i++) {
-			streamJid = FXmppStreams->xmppStreams().at(i)->streamJid();
+			streamJid = FXmppStreamManager->xmppStreams().at(i)->streamJid();
 			FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
 		}
 
@@ -718,8 +718,8 @@ void UserTuneHandler::onContactStateChanged(const Jid &streamJid, const Jid &sen
 void UserTuneHandler::setContactTune(const Jid &AStreamJid, const Jid &ASenderJid, const UserTuneData &ASong)
 {
 	if (FContactTune[AStreamJid].value(ASenderJid.pBare()) != ASong) {
-		IRoster *roster = FRosterPlugin ? FRosterPlugin->findRoster(AStreamJid) : nullptr;
-		if((roster && roster->rosterItem(ASenderJid).isValid)
+		IRoster *roster = FRosterManager ? FRosterManager->findRoster(AStreamJid) : nullptr;
+		if((roster && !roster->findItem(ASenderJid).isNull())
 				|| AStreamJid.pBare() == ASenderJid.pBare()) {
 			if (!ASong.title.isEmpty()) {
 				FContactTune[AStreamJid].insert(ASenderJid.pBare(),ASong);
