@@ -18,6 +18,7 @@
 #ifndef USERTUNE_H
 #define USERTUNE_H
 
+#include <QDebug>
 #include <QTextDocument>
 #include <QTimer>
 
@@ -66,6 +67,11 @@ class UserTuneHandler :
 public:
 	UserTuneHandler();
 	~UserTuneHandler();
+
+	static void interfaceNotFoundWarning(const QString ALostInterfaceName) {
+		qWarning() << QString("[UserTuneHandler] Interface `%1` not found").arg(ALostInterfaceName);
+	}
+
 	//IMessageEditor
 #ifdef Q_WS_X11
 	virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);

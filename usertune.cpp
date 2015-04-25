@@ -1,7 +1,3 @@
-#ifndef QT_NO_DEBUG
-#  include <QDebug>
-#endif
-
 #include <QClipboard>
 #include <QApplication>
 
@@ -27,6 +23,8 @@
 
 #include "definitions.h"
 
+#define MAKE_INTERFACE_NAME_STRING(interface_name) QLatin1String(#interface_name)
+
 #ifdef Q_WS_X11
 #define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
 { \
@@ -36,8 +34,6 @@
 	(root_element).appendChild(tag); \
 }
 #endif
-
-#define INTERFACE_NOT_FOUND(interface_name) QString("[UserTuneHandler] Interface %1 not found").arg(interface_name)
 
 #define ADR_CLIPBOARD_DATA Action::DR_Parametr2
 
@@ -97,24 +93,24 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 
 	IPlugin *plugin;
 
-	plugin = APluginManager->pluginInterface("IPEPManager").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IPEPManager)).value(0, nullptr);
 	if (!plugin) {
-		qWarning() << INTERFACE_NOT_FOUND("IPEPManager");
+		interfaceNotFoundWarning(MAKE_INTERFACE_NAME_STRING(IPEPManager));
 		return false;
 	}
 
 	FPEPManager = qobject_cast<IPEPManager *>(plugin->instance());
 
-	plugin = APluginManager->pluginInterface("IServiceDiscovery").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IServiceDiscovery)).value(0, nullptr);
 	if (!plugin) {
-		qWarning() << INTERFACE_NOT_FOUND("IServiceDiscovery");
+		interfaceNotFoundWarning(MAKE_INTERFACE_NAME_STRING(IServiceDiscovery));
 		return false;
 	}
 	FServiceDiscovery = qobject_cast<IServiceDiscovery *>(plugin->instance());
 
-	plugin = APluginManager->pluginInterface("IXmppStreamManager").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IXmppStreamManager)).value(0, nullptr);
 	if (!plugin) {
-		qWarning() << INTERFACE_NOT_FOUND("IXmppStreamManager");
+		interfaceNotFoundWarning(MAKE_INTERFACE_NAME_STRING(IXmppStreamManager));
 		return false;
 	}
 
@@ -127,7 +123,8 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		connect(FXmppStreamManager->xmppStreams().at(i)->instance(), SIGNAL(aboutToClose()), this, SLOT(onStopPublishing()));
 	}
 
-	plugin = APluginManager->pluginInterface("IPresenceManager").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IPresenceManager)).value(0, nullptr);
+	Q_ASSERT(plugin);
 	if (plugin) {
 		FPresenceManager = qobject_cast<IPresenceManager *>(plugin->instance());
 
@@ -138,24 +135,25 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		}
 	}
 
-	plugin = APluginManager->pluginInterface("IRoster").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IRoster)).value(0, nullptr);
+	Q_ASSERT(plugin);
 	if(plugin) {
 		FRoster = qobject_cast<IRoster *>(plugin->instance());
 	}
 
-	plugin = APluginManager->pluginInterface("IRosterManager").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IRosterManager)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FRosterManager = qobject_cast<IRosterManager *>(plugin->instance());
 	}
 
-	plugin = APluginManager->pluginInterface("IRostersModel").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IRostersModel)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FRostersModel = qobject_cast<IRostersModel *>(plugin->instance());
 	}
 
-	plugin = APluginManager->pluginInterface("IRostersViewPlugin").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IRostersViewPlugin)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FRostersViewPlugin = qobject_cast<IRostersViewPlugin *>(plugin->instance());
@@ -169,8 +167,8 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		}
 	}
 #ifdef Q_WS_X11
-	// player manage (/play, /pause etc command)
-	plugin = APluginManager->pluginInterface("IMessageProcessor").value(0, nullptr);
+	// player manage (command /play, /pause, etc)
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IMessageProcessor)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		IMessageProcessor *messageProcessor = qobject_cast<IMessageProcessor *>(plugin->instance());
@@ -180,19 +178,19 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		}
 	}
 
-	plugin = APluginManager->pluginInterface("IMessageWidgets").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IMessageWidgets)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FMessageWidgets = qobject_cast<IMessageWidgets *>(plugin->instance());
 	}
 
-	plugin = APluginManager->pluginInterface("IMultiUserChatManager").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IMultiUserChatManager)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FMultiUserChatManager = qobject_cast<IMultiUserChatManager *>(plugin->instance());
 	}
 #endif
-	plugin = APluginManager->pluginInterface("INotifications").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(INotifications)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FNotifications = qobject_cast<INotifications *>(plugin->instance());
@@ -202,7 +200,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		}
 	}
 
-	plugin = APluginManager->pluginInterface("IOptionsManager").value(0, nullptr);
+	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IOptionsManager)).value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
@@ -211,7 +209,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	connect(Options::instance(),SIGNAL(optionsOpened()),SLOT(onOptionsOpened()));
 	connect(Options::instance(),SIGNAL(optionsChanged(const OptionsNode &)),SLOT(onOptionsChanged(const OptionsNode &)));
 
-	connect (APluginManager->instance(), SIGNAL(aboutToQuit()), this, SLOT(onApplicationQuit()));
+	connect(APluginManager->instance(), SIGNAL(aboutToQuit()), this, SLOT(onApplicationQuit()));
 
 	return true;
 }
