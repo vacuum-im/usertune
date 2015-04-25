@@ -264,7 +264,7 @@ bool UserTuneHandler::initSettings()
 #endif
 
 	if (FOptionsManager) {
-		IOptionsDialogNode dnode = { ONO_USERTUNE, OPN_USERTUNE, tr("User Tune"), MNI_USERTUNE_MUSIC };
+		IOptionsDialogNode dnode = { ONO_USERTUNE, OPN_USERTUNE, MNI_USERTUNE_MUSIC, tr("User Tune") };
 		FOptionsManager->insertOptionsDialogNode(dnode);
 		FOptionsManager->insertOptionsDialogHolder(this);
 	}
