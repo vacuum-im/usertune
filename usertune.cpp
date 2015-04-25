@@ -34,8 +34,10 @@
 	QDomText text = (document).createTextNode(child_data); \
 	tag.appendChild(text); \
 	(root_element).appendChild(tag); \
-	}
+}
 #endif
+
+#define INTERFACE_NOT_FOUND(interface_name) QString("[UserTuneHandler] Interface %1 not found").arg(interface_name)
 
 #define ADR_CLIPBOARD_DATA Action::DR_Parametr2
 
@@ -96,16 +98,25 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	IPlugin *plugin;
 
 	plugin = APluginManager->pluginInterface("IPEPManager").value(0, nullptr);
-	if (!plugin) return false;
+	if (!plugin) {
+		qWarning() << INTERFACE_NOT_FOUND("IPEPManager");
+		return false;
+	}
 
 	FPEPManager = qobject_cast<IPEPManager *>(plugin->instance());
 
 	plugin = APluginManager->pluginInterface("IServiceDiscovery").value(0, nullptr);
-	if (!plugin) return false;
+	if (!plugin) {
+		qWarning() << INTERFACE_NOT_FOUND("IServiceDiscovery");
+		return false;
+	}
 	FServiceDiscovery = qobject_cast<IServiceDiscovery *>(plugin->instance());
 
-	plugin = APluginManager->pluginInterface("IXmppStreams").value(0, nullptr);
-	if (!plugin) return false;
+	plugin = APluginManager->pluginInterface("IXmppStreamManager").value(0, nullptr);
+	if (!plugin) {
+		qWarning() << INTERFACE_NOT_FOUND("IXmppStreamManager");
+		return false;
+	}
 
 	FXmppStreamManager = qobject_cast<IXmppStreamManager *>(plugin->instance());
 	connect(FXmppStreamManager->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
@@ -116,11 +127,11 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		connect(FXmppStreamManager->xmppStreams().at(i)->instance(), SIGNAL(aboutToClose()), this, SLOT(onStopPublishing()));
 	}
 
-	plugin = APluginManager->pluginInterface("IPresencePlugin").value(0, nullptr);
+	plugin = APluginManager->pluginInterface("IPresenceManager").value(0, nullptr);
 	if (plugin) {
 		FPresenceManager = qobject_cast<IPresenceManager *>(plugin->instance());
 
-		if (FPresenceManager)	{
+		if (FPresenceManager) {
 			connect(FPresenceManager->instance(),
 					SIGNAL(contactStateChanged(const Jid &, const Jid &, bool)),
 					SLOT(onContactStateChanged(const Jid &, const Jid &, bool)));
@@ -132,23 +143,23 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		FRoster = qobject_cast<IRoster *>(plugin->instance());
 	}
 
-	plugin = APluginManager->pluginInterface("IRosterPlugin").value(0, nullptr);
+	plugin = APluginManager->pluginInterface("IRosterManager").value(0, nullptr);
 	Q_ASSERT(plugin);
-	if (plugin)	{
+	if (plugin) {
 		FRosterManager = qobject_cast<IRosterManager *>(plugin->instance());
 	}
 
 	plugin = APluginManager->pluginInterface("IRostersModel").value(0, nullptr);
 	Q_ASSERT(plugin);
-	if (plugin)	{
+	if (plugin) {
 		FRostersModel = qobject_cast<IRostersModel *>(plugin->instance());
 	}
 
 	plugin = APluginManager->pluginInterface("IRostersViewPlugin").value(0, nullptr);
 	Q_ASSERT(plugin);
-	if (plugin)	{
+	if (plugin) {
 		FRostersViewPlugin = qobject_cast<IRostersViewPlugin *>(plugin->instance());
-		if (FRostersViewPlugin)	{
+		if (FRostersViewPlugin) {
 			connect(FRostersViewPlugin->rostersView()->instance(),
 					SIGNAL(indexClipboardMenu(const QList<IRosterIndex *> &, quint32, Menu *)),
 					SLOT(onRosterIndexClipboardMenu(const QList<IRosterIndex *> &, quint32, Menu *)));
@@ -175,7 +186,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 		FMessageWidgets = qobject_cast<IMessageWidgets *>(plugin->instance());
 	}
 
-	plugin = APluginManager->pluginInterface("IMultiUserChatPlugin").value(0, nullptr);
+	plugin = APluginManager->pluginInterface("IMultiUserChatManager").value(0, nullptr);
 	Q_ASSERT(plugin);
 	if (plugin) {
 		FMultiUserChatManager = qobject_cast<IMultiUserChatManager *>(plugin->instance());
