@@ -51,7 +51,6 @@ UserTuneHandler::UserTuneHandler() :
 	FNotifications(nullptr),
 	FOptionsManager(nullptr),
 	FPEPManager(nullptr),
-	FRoster(nullptr),
 	FRosterManager(nullptr),
 	FRostersModel(nullptr),
 	FRostersViewPlugin(nullptr),
@@ -133,12 +132,6 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 					SIGNAL(contactStateChanged(const Jid &, const Jid &, bool)),
 					SLOT(onContactStateChanged(const Jid &, const Jid &, bool)));
 		}
-	}
-
-	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IRoster)).value(0, nullptr);
-	Q_ASSERT(plugin);
-	if(plugin) {
-		FRoster = qobject_cast<IRoster *>(plugin->instance());
 	}
 
 	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IRosterManager)).value(0, nullptr);

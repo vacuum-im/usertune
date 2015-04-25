@@ -153,7 +153,6 @@ private:
 	IOptionsManager *FOptionsManager;
 	IPEPManager *FPEPManager;
 	IPresenceManager *FPresenceManager;
-	IRoster *FRoster;
 	IRosterManager *FRosterManager;
 	IRostersModel *FRostersModel;
 	IRostersViewPlugin *FRostersViewPlugin;
