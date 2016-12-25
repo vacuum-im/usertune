@@ -17,15 +17,15 @@
 #include "usertune.h"
 #include "mprisfetcher1.h"
 #include "mprisfetcher2.h"
-#ifdef Q_WS_X11
-#include "usertuneoptions.h"
+#ifdef READ_WRITE_TUNE
+#  include "usertuneoptions.h"
 #endif
 
 #include "definitions.h"
 
 #define MAKE_INTERFACE_NAME_STRING(interface_name) QLatin1String(#interface_name)
 
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 #define ADD_CHILD_ELEMENT(document, root_element, child_name, child_data) \
 { \
 	QDomElement tag = (document).createElement(child_name); \
@@ -56,13 +56,13 @@ UserTuneHandler::UserTuneHandler() :
 	FRostersViewPlugin(nullptr),
 	FServiceDiscovery(nullptr),
 	FXmppStreamManager(nullptr)
-  #ifdef Q_WS_X11
+  #ifdef READ_WRITE_TUNE
 	,FMessageWidgets(nullptr),
 	FMetaDataFetcher(nullptr),
 	FMultiUserChatManager(nullptr)
   #endif
 {
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	FTimer.setSingleShot(true);
 	FTimer.setInterval(PEP_SEND_DELAY);
 	connect(&FTimer, SIGNAL(timeout()), this, SLOT(onSendPep()));
@@ -78,7 +78,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = QLatin1String("1.0.10");
+	APluginInfo->version = QLatin1String("1.1.0");
 	APluginInfo->author = QLatin1String("Crying Angel");
 	APluginInfo->homePage = QLatin1String("http://www.vacuum-im.org");
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -159,7 +159,7 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 					SLOT(onRostersViewIndexToolTips(IRosterIndex *, quint32, QMap<int,QString> &)));
 		}
 	}
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	// player manage (command /play, /pause, etc)
 	plugin = APluginManager->pluginInterface(MAKE_INTERFACE_NAME_STRING(IMessageProcessor)).value(0, nullptr);
 	Q_ASSERT(plugin);
@@ -247,13 +247,13 @@ bool UserTuneHandler::initSettings()
 	Options::setDefaultValue(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO,true);
 	Options::setDefaultValue(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO,false);
 	Options::setDefaultValue(OPV_USERTUNE_TAG_FORMAT,QLatin1String("%T - %A - %S"));
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	Options::setDefaultValue(OPV_USERTUNE_PLAYER_NAME,QLatin1String("amarok"));
 	Options::setDefaultValue(OPV_USERTUNE_PLAYER_VER,FetcherVer::mprisV1);
-#elif Q_WS_WIN
+#else
 	// TODO: сделать для windows
 	Options::setDefaultValue(OPV_USERTUNE_PLAYER_NAME,QLatin1String(""));
-	Options::setDefaultValue(OPV_USERTUNE_PLAYER_VER,FetchrVer::fetcherNone);
+	Options::setDefaultValue(OPV_USERTUNE_PLAYER_VER,FetcherVer::fetcherNone);
 #endif
 
 	if (FOptionsManager) {
@@ -269,9 +269,9 @@ QMultiMap<int, IOptionsDialogWidget *> UserTuneHandler::optionsDialogWidgets(con
 {
 	QMultiMap<int, IOptionsDialogWidget *> widgets;
 	if (FOptionsManager && ANodeId == OPN_USERTUNE)	{
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 		widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
-#elif Q_WS_WIN
+#else
 		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
 		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_TAG_FORMAT),tr("Tag format:"),AParent));
 		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_PLAYER_NAME),tr("Player name:"),AParent));
@@ -284,7 +284,7 @@ void UserTuneHandler::onOptionsOpened()
 {
 	onOptionsChanged(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL));
 	onOptionsChanged(Options::node(OPV_USERTUNE_TAG_FORMAT));
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	onOptionsChanged(Options::node(OPV_USERTUNE_ALLOW_SEND_MUSIC_INFO));
 	onOptionsChanged(Options::node(OPV_USERTUNE_NOT_ALLOW_SEND_URL_INFO));
 	onOptionsChanged(Options::node(OPV_USERTUNE_PLAYER_VER));
@@ -312,7 +312,7 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 	} else if (ANode.path() == OPV_USERTUNE_TAG_FORMAT) {
 		FFormatTag = Options::node(OPV_USERTUNE_TAG_FORMAT).value().toString();
 	}
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	else if (ANode.path() == OPV_USERTUNE_PLAYER_VER) {
 		updateFetchers();
 	} else if (ANode.path() == OPV_USERTUNE_PLAYER_NAME) {
@@ -365,7 +365,7 @@ bool UserTuneHandler::setRosterData(int AOrder, const QVariant &AValue, IRosterI
 	return false;
 }
 
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 // for player manage
 bool UserTuneHandler::messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection)
 {
@@ -441,7 +441,7 @@ void UserTuneHandler::onShowNotification(const Jid &streamJid, const Jid &sender
 			notify.data.insert(NDR_POPUP_TITLE,FNotifications->contactName(streamJid, senderJid));
 			notify.data.insert(NDR_POPUP_IMAGE,FNotifications->contactAvatar(senderJid));
 
-			notify.data.insert(NDR_POPUP_TEXT,Qt::escape(getTagFormated(streamJid, senderJid)));
+			notify.data.insert(NDR_POPUP_TEXT,getTagFormated(streamJid, senderJid).toHtmlEscaped());
 
 			FNotifies.insert(FNotifications->appendNotification(notify),senderJid);
 		}
@@ -492,14 +492,14 @@ void UserTuneHandler::updateFetchers()
 	}
 
 	switch (Options::node(OPV_USERTUNE_PLAYER_VER).value().toUInt()) {
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	case FetcherVer::mprisV1:
 		FMetaDataFetcher = new MprisFetcher1(this, Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 		break;
 	case FetcherVer::mprisV2:
 		FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 		break;
-#elif Q_WS_WIN
+#elif READ_WRITE_TUNE
 	// for Windows players...
 #endif
 	default:
@@ -541,12 +541,12 @@ bool UserTuneHandler::processPEPEvent(const Jid &streamJid, const Stanza &AStanz
 
 						elem = tuneElem.firstChildElement(QLatin1String("length"));
 						if (!elem.isNull()) {
-							userSong.length = elem.text().toUInt();
+							userSong.length = elem.text().toUShort();
 						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("rating"));
 						if (!elem.isNull()) {
-							userSong.rating = elem.text().toUInt();
+							userSong.rating = elem.text().toUShort();
 						}
 
 						elem = tuneElem.firstChildElement(QLatin1String("source"));
@@ -578,7 +578,7 @@ bool UserTuneHandler::processPEPEvent(const Jid &streamJid, const Stanza &AStanz
 	return true;
 }
 
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 void UserTuneHandler::onTrackChanged(UserTuneData data)
 {
 	if (FTimer.isActive()) {
@@ -593,7 +593,7 @@ void UserTuneHandler::onTrackChanged(UserTuneData data)
 }
 #endif
 
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 void UserTuneHandler::onSendPep()
 {
 	QDomDocument doc(QLatin1String(""));
@@ -631,7 +631,7 @@ void UserTuneHandler::onSendPep()
 }
 #endif
 
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 void UserTuneHandler::onPlayerSatusChanged(PlayerStatus AStatus)
 {
 	if (AStatus.Play == PlaybackStatus::Stopped) {
@@ -640,7 +640,7 @@ void UserTuneHandler::onPlayerSatusChanged(PlayerStatus AStatus)
 }
 #endif
 
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 void UserTuneHandler::onStopPublishing()
 {
 	if (FTimer.isActive()) {
@@ -793,7 +793,7 @@ void UserTuneHandler::onRostersViewIndexToolTips(IRosterIndex *AIndex, quint32 A
 
 		if (FContactTune[streamJid].contains(senderJid.pBare())) {
 			QString formatedString = getTagFormated(streamJid, senderJid).replace(QLatin1String("\n"), QLatin1String("<br />"));
-			QString toolTip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(Qt::escape(formatedString));
+			QString toolTip = QString("%1 <div style='margin-left:10px;'>%2</div>").arg(tr("Listen:")).arg(formatedString.toHtmlEscaped());
 			AToolTips.insert(RTTO_USERTUNE, toolTip);
 		}
 	}
@@ -803,5 +803,3 @@ void UserTuneHandler::onApplicationQuit()
 {
 	FPEPManager->removeNodeHandler(FHandlerId);
 }
-
-Q_EXPORT_PLUGIN2(plg_pepmanager, UserTuneHandler)

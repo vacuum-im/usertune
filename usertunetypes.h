@@ -1,23 +1,15 @@
 #ifndef USERTUNETYPES_H
 #define USERTUNETYPES_H
 
-#ifdef __cplusplus
-  #if __cplusplus < 201103L //C++11
-	#define nullptr NULL
-  #endif
-#endif
-
 #include <QString>
 #include <QUrl>
 
 namespace FetcherVer {
 enum FetchersVer {
 	fetcherNone = 0,
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	mprisV1 = 1,
 	mprisV2
-#elif Q_WS_WIN
-
 #endif
 };
 }

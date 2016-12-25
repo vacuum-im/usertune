@@ -1,19 +1,21 @@
-//   Plugin to allows hadle user tunes for vacuum-im (c) Crying Angel, 2015
-//   This plugin uses DBus to get metadata.
-
-//   This library is free software; you can redistribute it and/or
-//   modify it under the terms of the GNU Library General Public
-//   License version 2 or later as published by the Free Software Foundation.
-//
-//   This library is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//   Library General Public License for more details.
-//
-//   You should have received a copy of the GNU Library General Public License
-//   along with this library; see the file COPYING.LIB.  If not, write to
-//   the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-//   Boston, MA 02110-1301, USA.
+/**
+ * Plugin to allows hadle user tunes for vacuum-im (c) Crying Angel, 2015
+ * This plugin uses DBus to get metadata.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License version 2 or later as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public License
+ * along with this library; see the file COPYING.LIB.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
 
 #ifndef USERTUNE_H
 #define USERTUNE_H
@@ -21,6 +23,10 @@
 #include <QDebug>
 #include <QTextDocument>
 #include <QTimer>
+
+#ifdef Q_OS_LINUX
+#  define READ_WRITE_TUNE
+#endif
 
 #include <interfaces/inotifications.h>
 #include <interfaces/ioptionsmanager.h>
@@ -32,17 +38,23 @@
 #include <interfaces/irostersview.h>
 #include <interfaces/iservicediscovery.h>
 #include <interfaces/ixmppstreammanager.h>
-#ifdef Q_WS_X11
-#include <interfaces/imessageprocessor.h>
-#include <interfaces/imessagewidgets.h>
-#include <interfaces/imultiuserchat.h>
+#ifdef READ_WRITE_TUNE
+#  include <interfaces/imessageprocessor.h>
+#  include <interfaces/imessagewidgets.h>
+#  include <interfaces/imultiuserchat.h>
 #endif
 
 #include <utils/options.h>
-#ifdef Q_WS_X11
-#include "imetadatafetcher.h"
+#ifdef READ_WRITE_TUNE
+#  include "imetadatafetcher.h"
 #endif
 #include "usertunetypes.h"
+
+#ifdef __cplusplus
+  #if __cplusplus < 201103L //C++11
+	#define nullptr NULL
+  #endif
+#endif
 
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 
@@ -52,18 +64,19 @@ class UserTuneHandler :
 		public IOptionsDialogHolder,
 		public IRosterDataHolder,
 		public IPEPHandler
-		#ifdef Q_WS_X11
+	#ifdef READ_WRITE_TUNE
 		,
 		public IMessageEditor
-		#endif
+	#endif
 
 {
 	Q_OBJECT
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	Q_INTERFACES(IPlugin IOptionsDialogHolder IRosterDataHolder IPEPHandler IMessageEditor)
 #else
 	Q_INTERFACES(IPlugin IOptionsDialogHolder IPEPHandler)
 #endif
+	Q_PLUGIN_METADATA(IID "UserTuneHandler")
 public:
 	UserTuneHandler();
 	~UserTuneHandler();
@@ -73,7 +86,7 @@ public:
 	}
 
 	//IMessageEditor
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	virtual bool messageReadWrite(int AOrder, const Jid &AStreamJid, Message &AMessage, int ADirection);
 #endif
 	//IPlugin
@@ -109,7 +122,7 @@ signals:
 	void rosterLabelChanged(quint32 ALabelId, IRosterIndex *AIndex = nullptr);
 
 protected slots:
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	void onTrackChanged(UserTuneData);
 	void onPlayerSatusChanged(PlayerStatus);
 	void onSendPep();
@@ -158,7 +171,7 @@ private:
 	IRostersViewPlugin *FRostersViewPlugin;
 	IServiceDiscovery *FServiceDiscovery;
 	IXmppStreamManager *FXmppStreamManager;
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	IMessageWidgets *FMessageWidgets;
 	IMetaDataFetcher *FMetaDataFetcher;
 	IMultiUserChatManager *FMultiUserChatManager;
@@ -168,7 +181,7 @@ private:
 	bool FTuneLabelVisible;
 	int FHandlerId;
 	quint32 FUserTuneLabelId;
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	bool FAllowSendPEP;
 	bool FAllowSendURLInPEP;
 	QString FFormatTag;
@@ -178,7 +191,7 @@ private:
 	QMap<int, Jid> FNotifies;
 
 private:
-#ifdef Q_WS_X11
+#ifdef READ_WRITE_TUNE
 	void updateFetchers();
 	QString getTagFormated(const Jid &streamJid, const Jid &senderJid) const;
 	QString getTagFormated(const UserTuneData &AUserData) const;
