@@ -3,10 +3,10 @@ include(qmake/config.inc)
 
 #Project configuration
 TARGET              = usertune
-QT                  = core gui dbus xml
+QT                  = core widgets dbus xml
 include(usertune.pri)
 
-#Default progect configuration
+#Default project configuration
 include(qmake/plugin.inc)
 
 #Translation

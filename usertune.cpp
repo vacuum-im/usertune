@@ -274,7 +274,6 @@ QMultiMap<int, IOptionsDialogWidget *> UserTuneHandler::optionsDialogWidgets(con
 #else
 		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL),tr("Show music icon in roster"),AParent));
 		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_TAG_FORMAT),tr("Tag format:"),AParent));
-		widgets.insertMulti(OWO_USERTUNE, FOptionsManager->optionsNodeWidget(Options::node(OPV_USERTUNE_PLAYER_NAME),tr("Player name:"),AParent));
 #endif
 	}
 	return widgets;
@@ -499,8 +498,6 @@ void UserTuneHandler::updateFetchers()
 	case FetcherVer::mprisV2:
 		FMetaDataFetcher = new MprisFetcher2(this, Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
 		break;
-#elif READ_WRITE_TUNE
-	// for Windows players...
 #endif
 	default:
 #ifndef QT_NO_DEBUG

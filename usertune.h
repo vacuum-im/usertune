@@ -24,7 +24,7 @@
 #include <QTextDocument>
 #include <QTimer>
 
-#ifdef Q_OS_LINUX
+#ifdef Q_OS_UNIX
 #  define READ_WRITE_TUNE
 #endif
 
@@ -49,12 +49,6 @@
 #  include "imetadatafetcher.h"
 #endif
 #include "usertunetypes.h"
-
-#ifdef __cplusplus
-  #if __cplusplus < 201103L //C++11
-	#define nullptr NULL
-  #endif
-#endif
 
 #define USERTUNE_UUID  "{b9adf1dd-25e4-48ab-b289-73d3c63e0f4a}"
 

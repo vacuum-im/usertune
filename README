@@ -1,6 +1,6 @@
 INFORMATION
 ===========
-  Plugin implements User Tune (XEP-0118): sending and receiving messages to subscribers of 
+  Plugin implements User Tune (XEP-0118): sending and receiving messages to subscribers of
   the currently playing music. Mechanism implemented over PEP (XEP-0163).
 
   Authors:
@@ -39,7 +39,11 @@ BUILD AND INSTALL
 CHANGELOG
 =========
   LEGEND: [+]-New feature [*]-Enhancement [-]-Bug fix
-  
+
+  v1.1.0
+  ------
+  [*] port to Qt5
+
   v0.1
   ------
   [!] Initial version

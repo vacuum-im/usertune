@@ -14,5 +14,3 @@ SOURCES = usertune.cpp \
           usertuneoptions.cpp
 
 FORMS +=  usertuneoptions.ui
-
-QT += widgets
