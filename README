@@ -40,6 +40,10 @@ CHANGELOG
 =========
   LEGEND: [+]-New feature [*]-Enhancement [-]-Bug fix
 
+  v1.1.1
+  ------
+  [*] add field to show stored player name
+
   v1.1.0
   ------
   [*] port to Qt5

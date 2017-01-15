@@ -15,9 +15,9 @@
 #include <utils/advanceditemdelegate.h>
 
 #include "usertune.h"
-#include "mprisfetcher1.h"
-#include "mprisfetcher2.h"
 #ifdef READ_WRITE_TUNE
+#  include "mprisfetcher1.h"
+#  include "mprisfetcher2.h"
 #  include "usertuneoptions.h"
 #endif
 
@@ -78,7 +78,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = QLatin1String("1.1.0");
+	APluginInfo->version = QLatin1String("1.1.1");
 	APluginInfo->author = QLatin1String("Crying Angel");
 	APluginInfo->homePage = QLatin1String("http://www.vacuum-im.org");
 	APluginInfo->dependences.append(PEPMANAGER_UUID);

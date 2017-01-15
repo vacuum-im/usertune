@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" sourcelanguage="en">
+<TS version="2.1" sourcelanguage="en">
 <context>
     <name>UserTuneHandler</name>
     <message>
@@ -36,10 +36,6 @@
         <translation>Tag format:</translation>
     </message>
     <message>
-        <source>Player name:</source>
-        <translation>Player name:</translation>
-    </message>
-    <message>
         <source>Listen:</source>
         <translation>Listen:</translation>
     </message>
@@ -60,11 +56,7 @@
     </message>
     <message>
         <source>Show format:</source>
-        <translation>Show format:</translation>
-    </message>
-    <message>
-        <source>Player name:</source>
-        <translation>Player name:</translation>
+        <translation type="unfinished">Show format:</translation>
     </message>
     <message>
         <source>Show music icon in roster</source>
@@ -76,7 +68,7 @@
     </message>
     <message>
         <source>MPRIS Version:</source>
-        <translation>MPRIS Version:</translation>
+        <translation type="unfinished">MPRIS Version:</translation>
     </message>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
@@ -89,6 +81,14 @@
     <message>
         <source>Never send a URL tag</source>
         <translation>Never send a URL tag</translation>
+    </message>
+    <message>
+        <source>Saved player name: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Runned players:</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

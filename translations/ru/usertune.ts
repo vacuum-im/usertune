@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="ru_RU" sourcelanguage="en">
+<TS version="2.1" language="ru_RU" sourcelanguage="en">
 <context>
     <name>UserTuneHandler</name>
     <message>
@@ -40,10 +40,6 @@
         <translation>Формат тега:</translation>
     </message>
     <message>
-        <source>Player name:</source>
-        <translation>Название плеера:</translation>
-    </message>
-    <message>
         <source>listening to</source>
         <translation>слушает</translation>
     </message>
@@ -67,10 +63,6 @@
         <translation>Показывать значок ноты в ростере</translation>
     </message>
     <message>
-        <source>Player name:</source>
-        <translation>Плеер:</translation>
-    </message>
-    <message>
         <source>Refresh</source>
         <translation>Обновить</translation>
     </message>
@@ -89,6 +81,14 @@
     <message>
         <source>Never send a URL tag</source>
         <translation>Никогда не отправлять URL-тег</translation>
+    </message>
+    <message>
+        <source>Saved player name: </source>
+        <translation>Сохранённое значение:</translation>
+    </message>
+    <message>
+        <source>Runned players:</source>
+        <translation>Название плеера:</translation>
     </message>
 </context>
 </TS>

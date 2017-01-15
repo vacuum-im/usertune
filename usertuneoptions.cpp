@@ -64,7 +64,9 @@ void UserTuneOptions::apply()
 	int index = ui->cb_mpris_version->currentIndex();
 
 	Options::node(OPV_USERTUNE_PLAYER_VER).setValue(ui->cb_mpris_version->itemData(index).toInt());
-	Options::node(OPV_USERTUNE_PLAYER_NAME).setValue(ui->cb_playerName->currentText());
+	QString playerName = ui->cb_playerName->currentText();
+	Options::node(OPV_USERTUNE_PLAYER_NAME).setValue(playerName);
+	ui->le_saved_player->setText(playerName);
 
 	emit childApply();
 }
@@ -81,8 +83,10 @@ void UserTuneOptions::reset()
 
 	onRefreshPlayers();
 
-	index = ui->cb_playerName->findText(Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString());
+	QString savedPlayer = Options::node(OPV_USERTUNE_PLAYER_NAME).value().toString();
+	index = ui->cb_playerName->findText(savedPlayer);
 	ui->cb_playerName->setCurrentIndex(index != -1 ? index : 0);
+	ui->le_saved_player->setText(savedPlayer);
 
 	emit childReset();
 }

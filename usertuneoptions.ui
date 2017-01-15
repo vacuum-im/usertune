@@ -92,9 +92,6 @@
        <property name="text">
         <string>Show format:</string>
        </property>
-       <property name="buddy">
-        <cstring>le_format</cstring>
-       </property>
       </widget>
      </item>
      <item>
@@ -108,6 +105,15 @@
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%A - artis&lt;br/&gt;%L - length&lt;br/&gt;%R - rating&lt;br/&gt;%S - source&lt;br/&gt;%T - title&lt;br/&gt;%N - track&lt;br/&gt;%U - URL&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
+       <property name="inputMask">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string notr="true"/>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
@@ -116,14 +122,8 @@
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="l_playerName">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
        <property name="text">
-        <string>Player name:</string>
-       </property>
-       <property name="buddy">
-        <cstring>cb_playerName</cstring>
+        <string>Runned players:</string>
        </property>
       </widget>
      </item>
@@ -147,14 +147,35 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Saved player name: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="le_saved_player">
+       <property name="inputMask">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string notr="true"/>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QLabel" name="l_mpris_version">
        <property name="text">
         <string>MPRIS Version:</string>
-       </property>
-       <property name="buddy">
-        <cstring>cb_mpris_version</cstring>
        </property>
       </widget>
      </item>
@@ -187,15 +208,6 @@
     </spacer>
    </item>
   </layout>
-  <zorder>btn_refreshPlayers</zorder>
-  <zorder>cb_playerName</zorder>
-  <zorder>l_playerName</zorder>
-  <zorder>l_tags</zorder>
-  <zorder>le_format</zorder>
-  <zorder>cb_mpris_version</zorder>
-  <zorder>l_mpris_version</zorder>
-  <zorder>chb_showIcon</zorder>
-  <zorder>chb_allowSendMusicInfo</zorder>
  </widget>
  <tabstops>
   <tabstop>chb_showIcon</tabstop>

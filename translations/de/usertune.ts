@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="de" sourcelanguage="en">
+<TS version="2.1" language="de" sourcelanguage="en">
 <context>
     <name>UserTuneHandler</name>
     <message>
@@ -40,10 +40,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Player name:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>listening to</source>
         <translation type="unfinished"></translation>
     </message>
@@ -59,23 +55,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Show format:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Show music icon in roster</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Player name:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>MPRIS Version:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -88,6 +72,22 @@
     </message>
     <message>
         <source>Never send a URL tag</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved player name: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Runned players:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show format:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MPRIS Version:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
