@@ -10,10 +10,10 @@ INFORMATION
     Sergey A Potapov - <potapov.s.a@gmail.com>
 
   Web Site:
-    http://code.google.com/p/vacuum-plugins/
+    https://github.com/Vacuum-IM/usertune
 
   Source:
-    http://code.google.com/p/vacuum-im
+    https://github.com/Vacuum-IM/usertune
 
   Jabber conference:
     vacuum@conference.jabber.ru
@@ -31,7 +31,7 @@ BUILD AND INSTALL
 
   Unix example
   ------------
-  qmake VACUUM_SDK_PATH="/usr/include/vacuum" CONFIG-=debug CONFIG-=debug_and_install
+  qmake VACUUM_SDK_PATH="/usr/include/vacuum-im" CONFIG-=debug CONFIG-=debug_and_install
   make
   sudo make install
 
@@ -39,6 +39,10 @@ BUILD AND INSTALL
 CHANGELOG
 =========
   LEGEND: [+]-New feature [*]-Enhancement [-]-Bug fix
+
+  v1.1.2
+  ------
+  [*] tune icon don't show in roster
 
   v1.1.1
   ------
