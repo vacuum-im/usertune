@@ -138,7 +138,6 @@ protected slots:
 	void onApplicationQuit();
 
 protected:
-	void onLabelsEnabled(const Jid &streamJid);
 	void setContactTune(const Jid &streamJid, const Jid &contactJid, const UserTuneData &song);
 	//IRosterDataHolder
 	void updateDataHolder(const Jid &streamJid, const Jid &senderJid);

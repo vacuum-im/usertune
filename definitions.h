@@ -38,7 +38,7 @@
 //Roster Label ID
 #define RLID_USERTUNE AdvancedDelegateItem::makeId(AdvancedDelegateItem::MiddleCenter,\
 												   128,\
-												   AdvancedDelegateItem::AlignRightOrderMask | 300)
+												   AdvancedDelegateItem::AlignRightOrderMask | 700)
 
 //Roster ToolTip Order
 #define RTTO_USERTUNE 910

@@ -13,6 +13,7 @@
 #include <definitions/rostertooltiporders.h>
 
 #include <utils/advanceditemdelegate.h>
+#include <utils/logger.h>
 
 #include "usertune.h"
 #ifdef READ_WRITE_TUNE
@@ -47,22 +48,25 @@
 
 static const QList<int> RosterKinds = QList<int>() << RIK_CONTACT << RIK_CONTACTS_ROOT << RIK_STREAM_ROOT;
 
-UserTuneHandler::UserTuneHandler() :
-	FNotifications(nullptr),
-	FOptionsManager(nullptr),
-	FPEPManager(nullptr),
-	FRosterManager(nullptr),
-	FRostersModel(nullptr),
-	FRostersViewPlugin(nullptr),
-	FServiceDiscovery(nullptr),
-	FXmppStreamManager(nullptr)
-  #ifdef READ_WRITE_TUNE
-	,FMessageWidgets(nullptr),
-	FMetaDataFetcher(nullptr),
-	FMultiUserChatManager(nullptr)
-  #endif
+UserTuneHandler::UserTuneHandler()
 {
+	FNotifications = nullptr;
+	FOptionsManager = nullptr;
+	FPEPManager = nullptr;
+	FPresenceManager = nullptr;
+	FRosterManager = nullptr;
+	FRostersModel = nullptr;
+	FRostersViewPlugin = nullptr;
+	FServiceDiscovery = nullptr;
+	FXmppStreamManager = nullptr;
+
+	FUserTuneLabelId = 0;
+
 #ifdef READ_WRITE_TUNE
+	FMessageWidgets = nullptr;
+	FMetaDataFetcher = nullptr;
+	FMultiUserChatManager = nullptr;
+
 	FTimer.setSingleShot(true);
 	FTimer.setInterval(PEP_SEND_DELAY);
 	connect(&FTimer, SIGNAL(timeout()), this, SLOT(onSendPep()));
@@ -78,7 +82,7 @@ void UserTuneHandler::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("User Tune Handler");
 	APluginInfo->description = tr("Allows hadle user tunes");
-	APluginInfo->version = QLatin1String("1.1.1");
+	APluginInfo->version = QLatin1String("1.1.2");
 	APluginInfo->author = QLatin1String("Crying Angel");
 	APluginInfo->homePage = QLatin1String("http://www.vacuum-im.org");
 	APluginInfo->dependences.append(PEPMANAGER_UUID);
@@ -114,8 +118,8 @@ bool UserTuneHandler::initConnections(IPluginManager *APluginManager, int &AInit
 	}
 
 	FXmppStreamManager = qobject_cast<IXmppStreamManager *>(plugin->instance());
-	connect(FXmppStreamManager->instance(), SIGNAL(opened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
-	connect(FXmppStreamManager->instance(), SIGNAL(closed(IXmppStream *)), this, SLOT(onUnsetMainLabel(IXmppStream*)));
+	connect(FXmppStreamManager->instance(), SIGNAL(streamOpened(IXmppStream *)), this, SLOT(onSetMainLabel(IXmppStream*)));
+	connect(FXmppStreamManager->instance(), SIGNAL(streamClosed(IXmppStream *)), this, SLOT(onUnsetMainLabel(IXmppStream*)));
 
 	int streams_size = FXmppStreamManager->xmppStreams().size();
 	for (int i = 0; i < streams_size; i++) {
@@ -236,7 +240,13 @@ bool UserTuneHandler::initObjects()
 		FRostersModel->insertRosterDataHolder(RDHO_USERTUNE, this);
 	}
 
-	FUserTuneLabelId = 0;
+	if (FRostersViewPlugin) {
+		AdvancedDelegateItem notifyLabel(RLID_USERTUNE);
+		notifyLabel.d->kind = AdvancedDelegateItem::CustomData;
+		notifyLabel.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
+
+		FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(notifyLabel);
+	}
 
 	return true;
 }
@@ -262,13 +272,15 @@ bool UserTuneHandler::initSettings()
 		FOptionsManager->insertOptionsDialogHolder(this);
 	}
 
+	onOptionsChanged(Options::node(OPV_USERTUNE_SHOW_ROSTER_LABEL));
+
 	return true;
 }
 
 QMultiMap<int, IOptionsDialogWidget *> UserTuneHandler::optionsDialogWidgets(const QString &ANodeId, QWidget *AParent)
 {
 	QMultiMap<int, IOptionsDialogWidget *> widgets;
-	if (FOptionsManager && ANodeId == OPN_USERTUNE)	{
+	if (FOptionsManager && ANodeId == OPN_USERTUNE) {
 #ifdef READ_WRITE_TUNE
 		widgets.insertMulti(OWO_USERTUNE, new UserTuneOptions(AParent));
 #else
@@ -295,18 +307,9 @@ void UserTuneHandler::onOptionsChanged(const OptionsNode &ANode)
 	if (ANode.path() == OPV_USERTUNE_SHOW_ROSTER_LABEL) {
 		FTuneLabelVisible = ANode.value().toBool();
 		if (FTuneLabelVisible) {
-			if (FUserTuneLabelId == 0) {
-				AdvancedDelegateItem notifyLabel(RLID_USERTUNE);
-				notifyLabel.d->kind = AdvancedDelegateItem::CustomData;
-				notifyLabel.d->data = IconStorage::staticStorage(RSR_STORAGE_MENUICONS)->getIcon(MNI_USERTUNE_MUSIC);
-				FUserTuneLabelId = FRostersViewPlugin->rostersView()->registerLabel(notifyLabel);
-				foreach (const Jid streamJid, FRostersModel->streams()) {
-					onLabelsEnabled(streamJid);
-				}
+			foreach (const Jid streamJid, FRostersModel->streams()) {
+				updateDataHolder(streamJid, Jid::null);
 			}
-		} else if (FUserTuneLabelId != 0) {
-			FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId);
-			FUserTuneLabelId = 0;
 		}
 	} else if (ANode.path() == OPV_USERTUNE_TAG_FORMAT) {
 		FFormatTag = Options::node(OPV_USERTUNE_TAG_FORMAT).value().toString();
@@ -683,19 +686,6 @@ void UserTuneHandler::onSetMainLabel(IXmppStream *AXmppStream)
 	}
 }
 
-void UserTuneHandler::onLabelsEnabled(const Jid &streamJid)
-{
-	if (FRostersViewPlugin) {
-		IRostersModel *model = FRostersViewPlugin->rostersView()->rostersModel();
-		IRosterIndex *index = model ? model->streamIndex(streamJid) : nullptr;
-		if (index) {
-			FRostersViewPlugin->rostersView()->insertLabel(FUserTuneLabelId, index);
-		}
-
-		updateDataHolder(streamJid, Jid());
-	}
-}
-
 void UserTuneHandler::onUnsetMainLabel(IXmppStream *AXmppStream)
 {
 	Jid streamJid = AXmppStream->streamJid();
@@ -799,4 +789,9 @@ void UserTuneHandler::onRostersViewIndexToolTips(IRosterIndex *AIndex, quint32 A
 void UserTuneHandler::onApplicationQuit()
 {
 	FPEPManager->removeNodeHandler(FHandlerId);
+	if (FUserTuneLabelId != 0 && FRostersViewPlugin)
+	{
+		FRostersViewPlugin->rostersView()->removeLabel(FUserTuneLabelId);
+		FUserTuneLabelId = 0;
+	}
 }
