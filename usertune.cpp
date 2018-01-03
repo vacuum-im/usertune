@@ -654,18 +654,17 @@ void UserTuneHandler::onStopPublishing()
 	QDomElement tune = doc.createElement(QLatin1String("tune"));
 	root.appendChild(tune);
 
-	Jid streamJid;
 	IXmppStream *stream = qobject_cast<IXmppStream *>(sender());
 
 	if (stream) {
-		streamJid = stream->streamJid();
+		Jid streamJid = stream->streamJid();
 		FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
 		FContactTune.remove(streamJid);
 	} else {
 		int streams_size = FXmppStreamManager->xmppStreams().size();
 
 		for (int i = 0; i < streams_size; i++) {
-			streamJid = FXmppStreamManager->xmppStreams().at(i)->streamJid();
+			Jid streamJid = FXmppStreamManager->xmppStreams().at(i)->streamJid();
 			FPEPManager->publishItem(streamJid, TUNE_PROTOCOL_URL, root);
 		}
 
