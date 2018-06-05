@@ -39,6 +39,8 @@ BUILD AND INSTALL
 CHANGELOG
 =========
   LEGEND: [+]-New feature [*]-Enhancement [-]-Bug fix
+  v1.1.3
+  [-] add support for Qt 5.11
 
   v1.1.2
   ------
