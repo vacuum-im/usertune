@@ -19,11 +19,11 @@ include("${CMAKE_SOURCE_DIR}/translations/languages.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/plugin.cmake")
 
 find_package(Qt5Xml REQUIRED)
-qt5_use_modules(${PLUGIN_NAME} Xml)
+target_link_libraries(${PLUGIN_NAME} Qt5::Xml)
 if (UNIX)
     find_package(Qt5DBus REQUIRED)
     find_package(Qt5Widgets REQUIRED)
-    qt5_use_modules(${PLUGIN_NAME} DBus Widgets)
+    target_link_libraries(${PLUGIN_NAME} Qt5::DBus Qt5::Widgets)
 endif (UNIX)
 
 install(DIRECTORY "resources/menuicons" DESTINATION "${INSTALL_RESOURCES}")
